@@ -1,0 +1,44 @@
+{
+  "name": "@droneey/eros-wire",
+  "version": "0.0.0",
+  "private": false,
+  "description": "eros on the transports: the RFC 9457 problem and its parser, and the HTTP, gRPC, MCP, CLI and queue projections of each kind.",
+  "homepage": "https://github.com/droneey/kit/tree/main/packages/eros/typescript/wire#readme",
+  "bugs": {
+    "url": "https://github.com/droneey/kit/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Dmytro Kurovskyi",
+    "url": "https://kurovskyi.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/droneey/kit.git",
+    "directory": "packages/eros/typescript/wire"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "files": [
+    "src",
+    "!src/**/__tests__"
+  ],
+  "scripts": {
+    "type:check": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
+    "architecture:check": "depcruise src --config ../../../../.dependency-cruiser.mjs"
+  },
+  "devDependencies": {
+    "@droneey/eros": "workspace:*"
+  },
+  "peerDependencies": {
+    "@droneey/eros": ">=0.0.0"
+  }
+}
