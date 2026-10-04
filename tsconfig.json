@@ -1,0 +1,18 @@
+{
+  "extends": [
+    "./.droneey/constitution/presets/typescript/tsc/foundation/self.json",
+    "./.droneey/constitution/presets/typescript/tsc/foundation/core.json",
+    "./.droneey/constitution/presets/typescript/tsc/foundation/bun.json"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    // Bun's test runner reads the specs of every package through this file and ignores an `extends` array
+    // (oven-sh/bun#43097), so the decorator options of the nestjs part are written here.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "libs/**/*.ts",
+    "packages/*/common/__tests__/**/*.ts"
+  ]
+}

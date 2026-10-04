@@ -1,0 +1,49 @@
+ls:
+  # Each language's part sets the folders of the root alone; the repository has both.
+  .dir: kebab-case | regex:^\.[a-z0-9]+(-[a-z0-9]+)*$ | regex:^__tests__$ | regex:^__pycache__$
+
+  # python: python.yaml's source root and specs, for each package rather than the root.
+  packages/*/python/*/src:
+    .dir: snake_case
+    .*: kebab-case
+    .*.*: kebab-case
+    .py: snake_case
+    .pyi: snake_case
+    .*.pyc: snake_case
+  packages/*/python/*/tests:
+    .dir: snake_case
+    .*: kebab-case
+    .*.*: kebab-case
+    .py: regex:^test_[a-z0-9_]+$ | regex:^conftest$ | regex:^[a-z0-9_]+_(fake|fixtures)$
+    .*.pyc: regex:^test_[a-z0-9_]+$ | regex:^conftest$ | regex:^[a-z0-9_]+_(fake|fixtures)$
+    .*.*.*.*.pyc: regex:^test_[a-z0-9_]+$ | regex:^conftest$
+
+  # python: architecture/core.yaml's role folders, for each package's import package.
+  packages/*/python/*/src/*/errors:
+    <<: &role
+      .dir: snake_case
+      .*: kebab-case
+      .*.*: kebab-case
+      .py: regex:^__init__$
+      .pyi: regex:^$
+      .*.pyc: snake_case
+    .py: regex:^__init__$ | regex:^[a-z0-9_]+_error$
+  packages/*/python/*/src/*/constants:
+    <<: *role
+    .py: regex:^__init__$ | regex:^[a-z0-9_]+_constants$
+  packages/*/python/*/src/*/types:
+    <<: *role
+    .py: regex:^__init__$ | regex:^[a-z0-9_]+_types$
+    .pyi: regex:^[a-z0-9_]+_types$
+  packages/*/python/*/src/*/utils:
+    <<: *role
+    .py: regex:^__init__$ | regex:^[a-z0-9_]+_utils$
+# The tools' parts skip their folders at the root; the Python tools run in each package.
+ignore:
+  - packages/*/typescript/*/node_modules
+  - packages/*/python/*/.complexipy_cache
+  - packages/*/python/*/.hypothesis
+  - packages/*/python/*/.import_linter_cache
+  - packages/*/python/*/.pytest_cache
+  - packages/*/python/*/.ruff_cache
+  - packages/*/python/*/mutants
