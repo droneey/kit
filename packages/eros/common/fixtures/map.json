@@ -1,0 +1,919 @@
+{
+  "operation": "map",
+  "description": "createErrorMapper: what the mapper throws for each mode and each kind of input, with mappings and a validationMapper. It rethrows the input itself, or throws a new error whose cause is the input.",
+  "cases": [
+    {
+      "name": "should wrap the value in an UnexpectedError when the mode is transparent and the value is not an error",
+      "input": {
+        "mapper": {
+          "mode": "transparent"
+        },
+        "error": {
+          "thrown": "boom"
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should rethrow the input when the mode is transparent and the input is unexpected",
+      "input": {
+        "mapper": {
+          "mode": "transparent"
+        },
+        "error": {
+          "kind": "internal",
+          "message": "Order 42 has no items."
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should rethrow the input when the mode is transparent and the input is a ValidationError",
+      "input": {
+        "mapper": {
+          "mode": "transparent"
+        },
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/email",
+                "code": "required",
+                "detail": "is required"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should rethrow the input when the mode is transparent and the input is expected",
+      "input": {
+        "mapper": {
+          "mode": "transparent"
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should rethrow the input when the mode is transparent and the input is not of eros",
+      "input": {
+        "mapper": {
+          "mode": "transparent"
+        },
+        "error": {
+          "foreign": {
+            "name": "Error",
+            "message": "Connection failed."
+          }
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should wrap the value in an UnexpectedError when the mode is expected and the value is not an error",
+      "input": {
+        "mapper": {
+          "mode": "expected"
+        },
+        "error": {
+          "thrown": {
+            "reason": "boom"
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should rethrow the input when the mode is expected and the input is unexpected",
+      "input": {
+        "mapper": {
+          "mode": "expected"
+        },
+        "error": {
+          "kind": "internal",
+          "message": "Order 42 has no items."
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should rethrow the input when the mode is expected and the input is a ValidationError",
+      "input": {
+        "mapper": {
+          "mode": "expected"
+        },
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/email",
+                "code": "required",
+                "detail": "is required"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should rethrow the input when the mode is expected and the input is expected",
+      "input": {
+        "mapper": {
+          "mode": "expected"
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should wrap the input in an UnexpectedError when the mode is expected and the input is not of eros",
+      "input": {
+        "mapper": {
+          "mode": "expected"
+        },
+        "error": {
+          "foreign": {
+            "name": "Error",
+            "message": "Connection failed."
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should wrap the value in an UnexpectedError when the mode is unexpected and the value is not an error",
+      "input": {
+        "mapper": {
+          "mode": "unexpected"
+        },
+        "error": {
+          "thrown": null
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should rethrow the input without wrapping it again when the mode is unexpected and the input is unexpected",
+      "input": {
+        "mapper": {
+          "mode": "unexpected"
+        },
+        "error": {
+          "kind": "internal",
+          "message": "Order 42 has no items."
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should wrap the input in an UnexpectedError when the mode is unexpected and the input is a ValidationError",
+      "input": {
+        "mapper": {
+          "mode": "unexpected"
+        },
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/email",
+                "code": "required",
+                "detail": "is required"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should wrap the input in an UnexpectedError when the mode is unexpected and the input is expected",
+      "input": {
+        "mapper": {
+          "mode": "unexpected"
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should wrap the input in an UnexpectedError when the mode is unexpected and the input is not of eros",
+      "input": {
+        "mapper": {
+          "mode": "unexpected"
+        },
+        "error": {
+          "foreign": {
+            "name": "Error",
+            "message": "Connection failed."
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should throw the target with the input as cause when a mapping's source matches",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "not-found",
+                "class": "TargetNotFoundError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "not-found",
+          "class": "TargetNotFoundError",
+          "code": "target/item/not-found",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should throw the first mapping's target when two mappings match",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "not-found",
+                "class": "TargetNotFoundError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            },
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "conflict",
+                "class": "TargetConflictError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "not-found",
+          "class": "TargetNotFoundError",
+          "code": "target/item/not-found",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should throw the second mapping's target when only the second mapping matches",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "not-found",
+                "class": "TargetNotFoundError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            },
+            {
+              "source": {
+                "kind": "conflict",
+                "class": "SourceConflictError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "conflict",
+                "class": "TargetConflictError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "conflict",
+          "class": "SourceConflictError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source conflict."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "conflict",
+          "class": "TargetConflictError",
+          "code": "target/item/conflict",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should match a subclass when a mapping's source is the kind's own class",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found"
+              },
+              "target": {
+                "kind": "conflict",
+                "class": "TargetConflictError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "conflict",
+          "class": "TargetConflictError",
+          "code": "target/item/conflict",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should throw the target when a mapping matches and the mode is unexpected",
+      "input": {
+        "mapper": {
+          "mode": "unexpected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "not-found",
+                "class": "TargetNotFoundError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "not-found",
+          "class": "TargetNotFoundError",
+          "code": "target/item/not-found",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should rethrow the input when no mapping matches and the mode is expected",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "not-found",
+                "class": "TargetNotFoundError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "conflict",
+          "class": "SourceConflictError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source conflict."
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    },
+    {
+      "name": "should wrap the input in an UnexpectedError when no mapping matches and the mode is unexpected",
+      "input": {
+        "mapper": {
+          "mode": "unexpected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "not-found",
+                "class": "TargetNotFoundError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "conflict",
+          "class": "SourceConflictError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source conflict."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "internal",
+          "code": "internal",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should map a ValidationError like any error when no validationMapper is set",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "validation"
+              },
+              "target": {
+                "kind": "conflict",
+                "class": "TargetConflictError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ]
+        },
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/email",
+                "code": "required",
+                "detail": "is required"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "conflict",
+          "class": "TargetConflictError",
+          "code": "target/item/conflict",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should throw a new ValidationError with its pointers remapped and the input as cause when a validationMapper is set",
+      "input": {
+        "mapper": {
+          "mode": "transparent",
+          "validationMapper": {
+            "prefixValidationFields": {
+              "prefix": "#/outer"
+            }
+          }
+        },
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/email",
+                "code": "invalid-format",
+                "detail": "must be an email"
+              },
+              {
+                "pointer": "#/items/0/quantity",
+                "code": "invalid-format",
+                "detail": "must be a positive integer"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "validation",
+          "code": "validation",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/outer/email",
+                "code": "invalid-format",
+                "detail": "must be an email"
+              },
+              {
+                "pointer": "#/outer/items/0/quantity",
+                "code": "invalid-format",
+                "detail": "must be a positive integer"
+              }
+            ]
+          },
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should remap a ValidationError when a validationMapper is set and the mode is unexpected",
+      "input": {
+        "mapper": {
+          "mode": "unexpected",
+          "validationMapper": {
+            "createValidationMapper": [
+              {
+                "pattern": "#/email",
+                "replacement": "#/contact/email"
+              }
+            ]
+          }
+        },
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/email",
+                "code": "invalid-format",
+                "detail": "must be an email"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "validation",
+          "code": "validation",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/contact/email",
+                "code": "invalid-format",
+                "detail": "must be an email"
+              }
+            ]
+          },
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should remap a ValidationError rather than map it when a validationMapper and a mapping both apply",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "validation"
+              },
+              "target": {
+                "kind": "conflict",
+                "class": "TargetConflictError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ],
+          "validationMapper": {
+            "prefixValidationFields": {
+              "prefix": "#/outer"
+            }
+          }
+        },
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/email",
+                "code": "invalid-format",
+                "detail": "must be an email"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "validation",
+          "code": "validation",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/outer/email",
+                "code": "invalid-format",
+                "detail": "must be an email"
+              }
+            ]
+          },
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should still map an error that is not a ValidationError when a validationMapper is set",
+      "input": {
+        "mapper": {
+          "mode": "expected",
+          "mappings": [
+            {
+              "source": {
+                "kind": "not-found",
+                "class": "SourceNotFoundError",
+                "meta": {
+                  "module": "source",
+                  "entity": "item"
+                }
+              },
+              "target": {
+                "kind": "not-found",
+                "class": "TargetNotFoundError",
+                "meta": {
+                  "module": "target",
+                  "entity": "item"
+                }
+              }
+            }
+          ],
+          "validationMapper": {
+            "prefixValidationFields": {
+              "prefix": "#/outer"
+            }
+          }
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": {
+          "kind": "not-found",
+          "class": "TargetNotFoundError",
+          "code": "target/item/not-found",
+          "cause": "input"
+        }
+      }
+    },
+    {
+      "name": "should apply the mode to an error that is not a ValidationError when a validationMapper is set",
+      "input": {
+        "mapper": {
+          "mode": "transparent",
+          "validationMapper": {
+            "prefixValidationFields": {
+              "prefix": "#/outer"
+            }
+          }
+        },
+        "error": {
+          "kind": "not-found",
+          "class": "SourceNotFoundError",
+          "meta": {
+            "module": "source",
+            "entity": "item"
+          },
+          "message": "Source not found."
+        }
+      },
+      "expected": {
+        "throws": "input"
+      }
+    }
+  ]
+}

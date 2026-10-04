@@ -1,0 +1,473 @@
+{
+  "operation": "record",
+  "description": "toRecord: an error becomes the plain object a log writes, unmasked, with the parts of its code and its causes. Stacks are left out of the expected records; the runner checks each is a string where it is present and compares the rest.",
+  "cases": [
+    {
+      "name": "should give the code, its parts, the category, the title, the message and isRetryable when the error is expected",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "order"
+        },
+        "message": "Order 42 not found."
+      },
+      "expected": {
+        "code": "orders/order/not-found",
+        "module": "orders",
+        "entity": "order",
+        "kind": "not-found",
+        "category": "expected",
+        "title": "Not Found",
+        "message": "Order 42 not found.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the details when the error has details",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "order"
+        },
+        "message": "Order 42 not found.",
+        "details": {
+          "orderId": "42"
+        }
+      },
+      "expected": {
+        "code": "orders/order/not-found",
+        "module": "orders",
+        "entity": "order",
+        "kind": "not-found",
+        "category": "expected",
+        "title": "Not Found",
+        "message": "Order 42 not found.",
+        "isRetryable": false,
+        "details": {
+          "orderId": "42"
+        }
+      }
+    },
+    {
+      "name": "should give the errors in the details when the kind is validation",
+      "input": {
+        "kind": "validation",
+        "message": "Validation failed.",
+        "details": {
+          "errors": [
+            {
+              "pointer": "#/email",
+              "code": "required",
+              "detail": "is required"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "code": "validation",
+        "kind": "validation",
+        "category": "expected",
+        "title": "Bad Request",
+        "message": "Validation failed.",
+        "isRetryable": false,
+        "details": {
+          "errors": [
+            {
+              "pointer": "#/email",
+              "code": "required",
+              "detail": "is required"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "should give the error's own isRetryable when it overrides the kind's",
+      "input": {
+        "kind": "unavailable",
+        "message": "The region is closed.",
+        "isRetryable": false
+      },
+      "expected": {
+        "code": "unavailable",
+        "kind": "unavailable",
+        "category": "expected",
+        "title": "Service Unavailable",
+        "message": "The region is closed.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the message unmasked when the error is unexpected",
+      "input": {
+        "kind": "internal",
+        "message": "Order 42 has no items."
+      },
+      "expected": {
+        "code": "internal",
+        "kind": "internal",
+        "category": "unexpected",
+        "title": "Internal Server Error",
+        "message": "Order 42 has no items.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the name and the message when the error is not of eros",
+      "input": {
+        "foreign": {
+          "name": "TypeError",
+          "message": "Cannot read properties of undefined (reading 'id')"
+        }
+      },
+      "expected": {
+        "name": "TypeError",
+        "message": "Cannot read properties of undefined (reading 'id')"
+      }
+    },
+    {
+      "name": "should give the cause as a foreign record when an unexpected error wraps a vendor's",
+      "input": {
+        "kind": "internal",
+        "message": "Stripe refused our key.",
+        "cause": {
+          "foreign": {
+            "name": "StripeAuthenticationError",
+            "message": "Invalid API Key provided."
+          }
+        }
+      },
+      "expected": {
+        "code": "internal",
+        "kind": "internal",
+        "category": "unexpected",
+        "title": "Internal Server Error",
+        "message": "Stripe refused our key.",
+        "isRetryable": false,
+        "cause": {
+          "name": "StripeAuthenticationError",
+          "message": "Invalid API Key provided."
+        }
+      }
+    },
+    {
+      "name": "should give every cause in turn when the chain mixes errors of eros and foreign ones",
+      "input": {
+        "kind": "internal",
+        "message": "Checkout of order 42 failed.",
+        "cause": {
+          "kind": "unavailable",
+          "class": "PaymentsUnavailableError",
+          "meta": {
+            "module": "payments",
+            "entity": "gateway"
+          },
+          "message": "Payments are unavailable.",
+          "retryAfterSeconds": 5,
+          "cause": {
+            "foreign": {
+              "name": "FetchError",
+              "message": "request to https://api.stripe.com failed",
+              "cause": {
+                "foreign": {
+                  "name": "Error",
+                  "message": "connect ECONNREFUSED 10.0.0.1:443"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "code": "internal",
+        "kind": "internal",
+        "category": "unexpected",
+        "title": "Internal Server Error",
+        "message": "Checkout of order 42 failed.",
+        "isRetryable": false,
+        "cause": {
+          "code": "payments/gateway/unavailable",
+          "module": "payments",
+          "entity": "gateway",
+          "kind": "unavailable",
+          "category": "expected",
+          "title": "Service Unavailable",
+          "message": "Payments are unavailable.",
+          "isRetryable": true,
+          "cause": {
+            "name": "FetchError",
+            "message": "request to https://api.stripe.com failed",
+            "cause": {
+              "name": "Error",
+              "message": "connect ECONNREFUSED 10.0.0.1:443"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "should give an error of eros as the cause of a foreign error when a vendor wraps ours",
+      "input": {
+        "foreign": {
+          "name": "JobFailedError",
+          "message": "Job send-invoice failed.",
+          "cause": {
+            "kind": "not-found",
+            "meta": {
+              "module": "orders",
+              "entity": "order"
+            },
+            "message": "Order 42 not found."
+          }
+        }
+      },
+      "expected": {
+        "name": "JobFailedError",
+        "message": "Job send-invoice failed.",
+        "cause": {
+          "code": "orders/order/not-found",
+          "module": "orders",
+          "entity": "order",
+          "kind": "not-found",
+          "category": "expected",
+          "title": "Not Found",
+          "message": "Order 42 not found.",
+          "isRetryable": false
+        }
+      }
+    },
+    {
+      "name": "should give an empty list of errors in the details when a ValidationError has none",
+      "input": {
+        "kind": "validation",
+        "message": "Validation failed."
+      },
+      "expected": {
+        "code": "validation",
+        "kind": "validation",
+        "category": "expected",
+        "title": "Bad Request",
+        "message": "Validation failed.",
+        "isRetryable": false,
+        "details": {
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "should give the reason when the code has one",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "order",
+          "reason": "archived"
+        },
+        "message": "Order 42 is archived."
+      },
+      "expected": {
+        "code": "orders/order/not-found/archived",
+        "module": "orders",
+        "entity": "order",
+        "kind": "not-found",
+        "reason": "archived",
+        "category": "expected",
+        "title": "Not Found",
+        "message": "Order 42 is archived.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the kind and the reason without a module when meta has only a reason",
+      "input": {
+        "kind": "violation",
+        "meta": {
+          "reason": "already-paid"
+        },
+        "message": "The order is already paid."
+      },
+      "expected": {
+        "code": "violation/already-paid",
+        "kind": "violation",
+        "reason": "already-paid",
+        "category": "expected",
+        "title": "Unprocessable Content",
+        "message": "The order is already paid.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of validation when an error of validation sets nothing",
+      "input": {
+        "kind": "validation"
+      },
+      "expected": {
+        "code": "validation",
+        "kind": "validation",
+        "category": "expected",
+        "title": "Bad Request",
+        "message": "Validation failed.",
+        "isRetryable": false,
+        "details": {
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "should give the defaults of unauthorized when an error of unauthorized sets nothing",
+      "input": {
+        "kind": "unauthorized"
+      },
+      "expected": {
+        "code": "unauthorized",
+        "kind": "unauthorized",
+        "category": "expected",
+        "title": "Unauthorized",
+        "message": "Authentication is required.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of forbidden when an error of forbidden sets nothing",
+      "input": {
+        "kind": "forbidden"
+      },
+      "expected": {
+        "code": "forbidden",
+        "kind": "forbidden",
+        "category": "expected",
+        "title": "Forbidden",
+        "message": "Access is forbidden.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of not-found when an error of not-found sets nothing",
+      "input": {
+        "kind": "not-found"
+      },
+      "expected": {
+        "code": "not-found",
+        "kind": "not-found",
+        "category": "expected",
+        "title": "Not Found",
+        "message": "Resource not found.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of conflict when an error of conflict sets nothing",
+      "input": {
+        "kind": "conflict"
+      },
+      "expected": {
+        "code": "conflict",
+        "kind": "conflict",
+        "category": "expected",
+        "title": "Conflict",
+        "message": "Resource conflict.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of expired when an error of expired sets nothing",
+      "input": {
+        "kind": "expired"
+      },
+      "expected": {
+        "code": "expired",
+        "kind": "expired",
+        "category": "expected",
+        "title": "Gone",
+        "message": "Resource expired.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of payload-too-large when an error of payload-too-large sets nothing",
+      "input": {
+        "kind": "payload-too-large"
+      },
+      "expected": {
+        "code": "payload-too-large",
+        "kind": "payload-too-large",
+        "category": "expected",
+        "title": "Content Too Large",
+        "message": "Payload is too large.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of violation when an error of violation sets nothing",
+      "input": {
+        "kind": "violation"
+      },
+      "expected": {
+        "code": "violation",
+        "kind": "violation",
+        "category": "expected",
+        "title": "Unprocessable Content",
+        "message": "A business rule was violated.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the defaults of rate-limited when an error of rate-limited sets nothing",
+      "input": {
+        "kind": "rate-limited"
+      },
+      "expected": {
+        "code": "rate-limited",
+        "kind": "rate-limited",
+        "category": "expected",
+        "title": "Too Many Requests",
+        "message": "Too many requests.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give the defaults of unavailable when an error of unavailable sets nothing",
+      "input": {
+        "kind": "unavailable"
+      },
+      "expected": {
+        "code": "unavailable",
+        "kind": "unavailable",
+        "category": "expected",
+        "title": "Service Unavailable",
+        "message": "Service is unavailable.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give the defaults of timeout when an error of timeout sets nothing",
+      "input": {
+        "kind": "timeout"
+      },
+      "expected": {
+        "code": "timeout",
+        "kind": "timeout",
+        "category": "expected",
+        "title": "Gateway Timeout",
+        "message": "A dependency did not answer in time.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give the defaults of internal when an unexpected error sets nothing",
+      "input": {
+        "kind": "internal"
+      },
+      "expected": {
+        "code": "internal",
+        "kind": "internal",
+        "category": "unexpected",
+        "title": "Internal Server Error",
+        "message": "An unexpected error occurred.",
+        "isRetryable": false
+      }
+    }
+  ]
+}

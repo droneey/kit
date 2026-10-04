@@ -1,0 +1,163 @@
+{
+  "operation": "parse-code",
+  "description": "parseCode: a code becomes its parts by the number of its segments: kind; kind and reason; module, entity and kind; module, entity, kind and reason. It checks neither the kind nor the spelling, and gives nothing for an empty segment or a count outside 1 to 4.",
+  "cases": [
+    {
+      "name": "should give the kind when the code has one segment",
+      "input": {
+        "code": "internal"
+      },
+      "expected": {
+        "kind": "internal"
+      }
+    },
+    {
+      "name": "should give the kind and the reason when the code has two segments",
+      "input": {
+        "code": "validation/missing-body"
+      },
+      "expected": {
+        "kind": "validation",
+        "reason": "missing-body"
+      }
+    },
+    {
+      "name": "should give the module, the entity and the kind when the code has three segments",
+      "input": {
+        "code": "orders/order/not-found"
+      },
+      "expected": {
+        "module": "orders",
+        "entity": "order",
+        "kind": "not-found"
+      }
+    },
+    {
+      "name": "should give the module, the entity, the kind and the reason when the code has four segments",
+      "input": {
+        "code": "orders/order/violation/already-paid"
+      },
+      "expected": {
+        "module": "orders",
+        "entity": "order",
+        "kind": "violation",
+        "reason": "already-paid"
+      }
+    },
+    {
+      "name": "should keep a two-word segment whole when the code has one",
+      "input": {
+        "code": "orders/promo-code/not-found"
+      },
+      "expected": {
+        "module": "orders",
+        "entity": "promo-code",
+        "kind": "not-found"
+      }
+    },
+    {
+      "name": "should give the kind as it is when it is not a kind of eros",
+      "input": {
+        "code": "teapot"
+      },
+      "expected": {
+        "kind": "teapot"
+      }
+    },
+    {
+      "name": "should give the parts as they are when the kind is not of eros and the code has four segments",
+      "input": {
+        "code": "kitchen/kettle/teapot/boiling"
+      },
+      "expected": {
+        "module": "kitchen",
+        "entity": "kettle",
+        "kind": "teapot",
+        "reason": "boiling"
+      }
+    },
+    {
+      "name": "should give the segments as they are when they are not in lower kebab case",
+      "input": {
+        "code": "Orders/ORDER/not_found"
+      },
+      "expected": {
+        "module": "Orders",
+        "entity": "ORDER",
+        "kind": "not_found"
+      }
+    },
+    {
+      "name": "should give the whole code as the kind when it has no slash",
+      "input": {
+        "code": "ORDERS_ORDER_NOT_FOUND"
+      },
+      "expected": {
+        "kind": "ORDERS_ORDER_NOT_FOUND"
+      }
+    },
+    {
+      "name": "should give a segment as it is when it holds a space",
+      "input": {
+        "code": "not found"
+      },
+      "expected": {
+        "kind": "not found"
+      }
+    },
+    {
+      "name": "should give nothing when the code is empty",
+      "input": {
+        "code": ""
+      },
+      "expected": {
+        "isUnparsed": true
+      }
+    },
+    {
+      "name": "should give nothing when the code has five segments",
+      "input": {
+        "code": "shop/orders/order/violation/already-paid"
+      },
+      "expected": {
+        "isUnparsed": true
+      }
+    },
+    {
+      "name": "should give nothing when the code begins with a slash",
+      "input": {
+        "code": "/not-found"
+      },
+      "expected": {
+        "isUnparsed": true
+      }
+    },
+    {
+      "name": "should give nothing when the code ends with a slash",
+      "input": {
+        "code": "not-found/"
+      },
+      "expected": {
+        "isUnparsed": true
+      }
+    },
+    {
+      "name": "should give nothing when the code has two slashes in a row",
+      "input": {
+        "code": "orders//not-found"
+      },
+      "expected": {
+        "isUnparsed": true
+      }
+    },
+    {
+      "name": "should give nothing when the code is a slash alone",
+      "input": {
+        "code": "/"
+      },
+      "expected": {
+        "isUnparsed": true
+      }
+    }
+  ]
+}

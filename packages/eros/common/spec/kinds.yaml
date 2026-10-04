@@ -1,0 +1,161 @@
+# Every kind of error eros knows, keyed by its id, which is also the kind's segment of a code.
+# class: the kind's class in each language.
+# title: RFC 9110's, the same for every error of the kind.
+# message: the default text, which an error may replace with its own.
+# isRetryable: the default, which an error may override when it is created.
+# category: expected, or unexpected for internal alone.
+kinds:
+  validation:
+    class: ValidationError
+    title: Bad Request
+    message: Validation failed.
+    isRetryable: false
+    category: expected
+  unauthorized:
+    class: UnauthorizedError
+    title: Unauthorized
+    message: Authentication is required.
+    isRetryable: false
+    category: expected
+  forbidden:
+    class: ForbiddenError
+    title: Forbidden
+    message: Access is forbidden.
+    isRetryable: false
+    category: expected
+  not-found:
+    class: NotFoundError
+    title: Not Found
+    message: Resource not found.
+    isRetryable: false
+    category: expected
+  conflict:
+    class: ConflictError
+    title: Conflict
+    message: Resource conflict.
+    isRetryable: false
+    category: expected
+  expired:
+    class: ExpiredError
+    title: Gone
+    message: Resource expired.
+    isRetryable: false
+    category: expected
+  payload-too-large:
+    class: PayloadTooLargeError
+    title: Content Too Large
+    message: Payload is too large.
+    isRetryable: false
+    category: expected
+  violation:
+    class: ViolationError
+    title: Unprocessable Content
+    message: A business rule was violated.
+    isRetryable: false
+    category: expected
+  rate-limited:
+    class: RateLimitedError
+    title: Too Many Requests
+    message: Too many requests.
+    isRetryable: true
+    category: expected
+  unavailable:
+    class: UnavailableError
+    title: Service Unavailable
+    message: Service is unavailable.
+    isRetryable: true
+    category: expected
+  timeout:
+    class: TimeoutError
+    title: Gateway Timeout
+    message: A dependency did not answer in time.
+    isRetryable: true
+    category: expected
+  internal:
+    class: UnexpectedError
+    title: Internal Server Error
+    message: An unexpected error occurred.
+    isRetryable: false
+    category: unexpected
+
+# How each kind shows on a transport. The wire package applies them; the core does not read them.
+# http: the HTTP status.
+# grpc: the gRPC status name.
+# mcp: tool-error, a tool result with isError and the problem in structuredContent;
+#   internal-error, a masked JSON-RPC error -32603.
+# exitCode: the CLI's exit code, from sysexits.
+# queue: what a consumer does with the message. An expected error whose isRetryable differs
+#   from its kind's default goes to retry when it is true and to dead-letter when it is false.
+projections:
+  validation:
+    http: 400
+    grpc: INVALID_ARGUMENT
+    mcp: tool-error
+    exitCode: 64 # EX_USAGE
+    queue: dead-letter
+  unauthorized:
+    http: 401
+    grpc: UNAUTHENTICATED
+    mcp: tool-error
+    exitCode: 77 # EX_NOPERM
+    queue: dead-letter
+  forbidden:
+    http: 403
+    grpc: PERMISSION_DENIED
+    mcp: tool-error
+    exitCode: 77 # EX_NOPERM
+    queue: dead-letter
+  not-found:
+    http: 404
+    grpc: NOT_FOUND
+    mcp: tool-error
+    exitCode: 66 # EX_NOINPUT
+    queue: dead-letter
+  conflict:
+    http: 409
+    grpc: ABORTED
+    mcp: tool-error
+    exitCode: 65 # EX_DATAERR
+    queue: dead-letter
+  expired:
+    http: 410
+    grpc: FAILED_PRECONDITION
+    mcp: tool-error
+    exitCode: 65 # EX_DATAERR
+    queue: dead-letter
+  payload-too-large:
+    http: 413
+    grpc: RESOURCE_EXHAUSTED
+    mcp: tool-error
+    exitCode: 65 # EX_DATAERR
+    queue: dead-letter
+  violation:
+    http: 422
+    grpc: FAILED_PRECONDITION
+    mcp: tool-error
+    exitCode: 65 # EX_DATAERR
+    queue: dead-letter
+  rate-limited:
+    http: 429
+    grpc: RESOURCE_EXHAUSTED
+    mcp: tool-error
+    exitCode: 75 # EX_TEMPFAIL
+    queue: retry
+  unavailable:
+    http: 503
+    grpc: UNAVAILABLE
+    mcp: tool-error
+    exitCode: 69 # EX_UNAVAILABLE
+    queue: retry
+  timeout:
+    http: 504
+    grpc: DEADLINE_EXCEEDED
+    mcp: tool-error
+    exitCode: 75 # EX_TEMPFAIL
+    queue: retry-if-idempotent
+  internal:
+    http: 500
+    grpc: INTERNAL
+    mcp: internal-error
+    exitCode: 70 # EX_SOFTWARE
+    queue: dead-letter-and-alert

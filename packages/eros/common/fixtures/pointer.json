@@ -1,0 +1,345 @@
+{
+  "operation": "pointer",
+  "description": "prefixValidationFields and createValidationMapper: how each rewrites the JSON Pointer of a validation failure, in its URI fragment form.",
+  "cases": [
+    {
+      "name": "should put the prefix before the member when the pointer names a root member",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload"
+          }
+        },
+        "pointer": "#/cityId"
+      },
+      "expected": "#/strategyPayload/cityId"
+    },
+    {
+      "name": "should put the prefix before the path when the pointer is nested",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload"
+          }
+        },
+        "pointer": "#/details/firstName"
+      },
+      "expected": "#/strategyPayload/details/firstName"
+    },
+    {
+      "name": "should put the prefix before the path when the pointer holds an array index",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload"
+          }
+        },
+        "pointer": "#/items/0/quantity"
+      },
+      "expected": "#/strategyPayload/items/0/quantity"
+    },
+    {
+      "name": "should give the prefix itself when the pointer is the root",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload"
+          }
+        },
+        "pointer": "#"
+      },
+      "expected": "#/strategyPayload"
+    },
+    {
+      "name": "should put every part of the prefix before the path when the prefix is nested",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategy/payload"
+          }
+        },
+        "pointer": "#/cityId"
+      },
+      "expected": "#/strategy/payload/cityId"
+    },
+    {
+      "name": "should keep the pointer when it names a member kept at the root",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "generatedId"
+            ]
+          }
+        },
+        "pointer": "#/generatedId"
+      },
+      "expected": "#/generatedId"
+    },
+    {
+      "name": "should keep the pointer when it is nested under a member kept at the root",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "meta"
+            ]
+          }
+        },
+        "pointer": "#/meta/nested/field"
+      },
+      "expected": "#/meta/nested/field"
+    },
+    {
+      "name": "should prefix the pointer when its member is not kept at the root",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "generatedId"
+            ]
+          }
+        },
+        "pointer": "#/details/firstName"
+      },
+      "expected": "#/strategyPayload/details/firstName"
+    },
+    {
+      "name": "should prefix the pointer when its member only begins with the name of a kept one",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "generatedId"
+            ]
+          }
+        },
+        "pointer": "#/generatedIdSuffix"
+      },
+      "expected": "#/strategyPayload/generatedIdSuffix"
+    },
+    {
+      "name": "should prefix the pointer when the kept member appears below the root",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "generatedId"
+            ]
+          }
+        },
+        "pointer": "#/details/generatedId"
+      },
+      "expected": "#/strategyPayload/details/generatedId"
+    },
+    {
+      "name": "should keep the pointer when it names the second of several members kept at the root",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "generatedId",
+              "targetId"
+            ]
+          }
+        },
+        "pointer": "#/targetId/x"
+      },
+      "expected": "#/targetId/x"
+    },
+    {
+      "name": "should keep the pointer when a kept member's name holds a slash",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "a/b"
+            ]
+          }
+        },
+        "pointer": "#/a~1b/c"
+      },
+      "expected": "#/a~1b/c"
+    },
+    {
+      "name": "should prefix the pointer when its path only looks like a kept member's name with a slash",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "a/b"
+            ]
+          }
+        },
+        "pointer": "#/a/b"
+      },
+      "expected": "#/strategyPayload/a/b"
+    },
+    {
+      "name": "should keep the pointer when a kept member's name holds a tilde",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "a~b"
+            ]
+          }
+        },
+        "pointer": "#/a~0b"
+      },
+      "expected": "#/a~0b"
+    },
+    {
+      "name": "should prefix the root pointer when members are kept at the root",
+      "input": {
+        "remap": {
+          "prefixValidationFields": {
+            "prefix": "#/strategyPayload",
+            "keepAtRoot": [
+              "generatedId"
+            ]
+          }
+        },
+        "pointer": "#"
+      },
+      "expected": "#/strategyPayload"
+    },
+    {
+      "name": "should give the replacement when a pattern equals the pointer",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "pattern": "#/details/firstName",
+              "replacement": "#/clientDetails/firstName"
+            }
+          ]
+        },
+        "pointer": "#/details/firstName"
+      },
+      "expected": "#/clientDetails/firstName"
+    },
+    {
+      "name": "should keep the pointer when no rule matches",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "pattern": "#/details/firstName",
+              "replacement": "#/clientDetails/firstName"
+            }
+          ]
+        },
+        "pointer": "#/items/0/sku"
+      },
+      "expected": "#/items/0/sku"
+    },
+    {
+      "name": "should keep the pointer when a pattern is only its beginning",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "pattern": "#/details",
+              "replacement": "#/shipmentDetails"
+            }
+          ]
+        },
+        "pointer": "#/details/firstName"
+      },
+      "expected": "#/details/firstName"
+    },
+    {
+      "name": "should apply the first matching rule when several rules match",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "pattern": "#/details/firstName",
+              "replacement": "#/clientDetails/firstName"
+            },
+            {
+              "regex": "^#/details/(.+)$",
+              "replacement": "#/shipmentDetails/$1"
+            }
+          ]
+        },
+        "pointer": "#/details/firstName"
+      },
+      "expected": "#/clientDetails/firstName"
+    },
+    {
+      "name": "should fill in the captured groups when a regex rule matches",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "regex": "^#/details/(.+)$",
+              "replacement": "#/shipmentDetails/$1"
+            }
+          ]
+        },
+        "pointer": "#/details/cityId"
+      },
+      "expected": "#/shipmentDetails/cityId"
+    },
+    {
+      "name": "should fill in an array index when a regex rule captures it",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "regex": "^#/items/(\\d+)/sku$",
+              "replacement": "#/items/$1/productVariantSku"
+            }
+          ]
+        },
+        "pointer": "#/items/2/sku"
+      },
+      "expected": "#/items/2/productVariantSku"
+    },
+    {
+      "name": "should replace only the matched part when a regex rule is not anchored",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "regex": "/sku$",
+              "replacement": "/productVariantSku"
+            }
+          ]
+        },
+        "pointer": "#/items/2/sku"
+      },
+      "expected": "#/items/2/productVariantSku"
+    },
+    {
+      "name": "should try the next rule when a regex rule does not match",
+      "input": {
+        "remap": {
+          "createValidationMapper": [
+            {
+              "regex": "^#/items/\\d+/sku$",
+              "replacement": "#/items/sku"
+            },
+            {
+              "regex": "^#/items/\\d+/quantity$",
+              "replacement": "#/items/quantity"
+            }
+          ]
+        },
+        "pointer": "#/items/3/quantity"
+      },
+      "expected": "#/items/quantity"
+    }
+  ]
+}

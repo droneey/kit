@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/droneey/kit/main/packages/eros/common/spec/error-record.schema.json",
+  "title": "eros error record",
+  "description": "The plain object toRecord makes of an error for the log, with the parts of its code and its causes. A logger reads this schema and needs nothing else of eros. It holds no log level: the logger chooses one.",
+  "$ref": "#/definitions/record",
+  "definitions": {
+    "record": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/erosRecord"
+        },
+        {
+          "$ref": "#/definitions/foreignRecord"
+        }
+      ]
+    },
+    "segment": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "erosRecord": {
+      "description": "An error of eros, unmasked: the log sees what the client does not.",
+      "type": "object",
+      "required": [
+        "code",
+        "kind",
+        "category",
+        "title",
+        "message",
+        "isRetryable"
+      ],
+      "properties": {
+        "code": {
+          "description": "[<module>/<entity>/]<kind>[/<reason>]: the parts below, joined by slashes.",
+          "type": "string",
+          "pattern": "^([a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*/)?(validation|unauthorized|forbidden|not-found|conflict|expired|payload-too-large|violation|rate-limited|unavailable|timeout|internal)(/[a-z0-9]+(-[a-z0-9]+)*)?$"
+        },
+        "module": {
+          "description": "The code's module, present only when the error has one.",
+          "$ref": "#/definitions/segment"
+        },
+        "entity": {
+          "description": "The code's entity, present only when the error has one.",
+          "$ref": "#/definitions/segment"
+        },
+        "kind": {
+          "description": "The id of the error's kind.",
+          "enum": [
+            "validation",
+            "unauthorized",
+            "forbidden",
+            "not-found",
+            "conflict",
+            "expired",
+            "payload-too-large",
+            "violation",
+            "rate-limited",
+            "unavailable",
+            "timeout",
+            "internal"
+          ]
+        },
+        "reason": {
+          "description": "The code's reason, present only when the error has one.",
+          "$ref": "#/definitions/segment"
+        },
+        "category": {
+          "enum": [
+            "expected",
+            "unexpected"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        },
+        "isRetryable": {
+          "type": "boolean"
+        },
+        "details": {
+          "description": "The error's safe details; for validation, its errors.",
+          "type": "object"
+        },
+        "stack": {
+          "type": "string"
+        },
+        "cause": {
+          "$ref": "#/definitions/record"
+        }
+      },
+      "additionalProperties": false,
+      "dependencies": {
+        "module": [
+          "entity"
+        ],
+        "entity": [
+          "module"
+        ]
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "internal"
+          }
+        }
+      },
+      "then": {
+        "description": "An unexpected error's code is internal alone.",
+        "properties": {
+          "code": {
+            "const": "internal"
+          },
+          "module": false,
+          "entity": false,
+          "reason": false,
+          "category": {
+            "const": "unexpected"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "category": {
+            "const": "expected"
+          }
+        }
+      }
+    },
+    "foreignRecord": {
+      "description": "An error that is not of eros: a runtime's own or a vendor's.",
+      "type": "object",
+      "required": [
+        "name",
+        "message"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        },
+        "stack": {
+          "type": "string"
+        },
+        "cause": {
+          "$ref": "#/definitions/record"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
