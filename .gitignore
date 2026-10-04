@@ -1,0 +1,119 @@
+# core: the constitution, unpacked by mise
+/.droneey
+
+# core: OS
+.DS_Store
+
+# core: environment
+.env*
+!.env.example
+mise.local.toml
+
+# core: runtime
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# core: temporary
+.temp/
+.tmp/
+
+# core: logs
+**/logs/
+*.log
+
+# core: build
+**/dist/
+**/build/
+**/coverage/
+
+# core: IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+.claude/settings.local.json
+.claude/worktrees/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# core: diagnostic
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# core: keys and credentials
+ssl/
+acme.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.crt
+credentials.json
+id_rsa
+*.secrets
+.htpasswd
+
+# core: working notes
+/local/
+
+# typescript: dependencies
+**/node_modules/
+
+# typescript: logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# typescript: build
+*.tgz
+*.lcov
+
+# typescript: auth
+.npmrc
+
+# typescript: caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# python: bytecode
+__pycache__/
+*.py[cod]
+
+# python: build
+*.egg-info/
+
+# pytest: caches and coverage
+.pytest_cache/
+.coverage
+
+# hypothesis: the inputs that failed
+.hypothesis/
+
+# mutmut: the mutants
+mutants/
+
+# import-linter: caches
+.import_linter_cache/
+
+# complexipy: caches
+.complexipy_cache/
+
+# uv: the environment
+.venv/
+
+# ruff: caches
+.ruff_cache/
+
+# stryker: the sandbox
+.stryker-tmp/

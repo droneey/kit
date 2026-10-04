@@ -1,0 +1,54 @@
+# uv: the workspace of the Python packages
+[tool.uv.workspace]
+members = ["packages/*/python/*"]
+
+# uv: installs
+[tool.uv]
+exclude-newer = "3 days"
+no-build = true
+python-downloads = "never"
+python-preference = "only-system"
+
+[tool.uv.sources]
+droneey-eros = { workspace = true }
+droneey-eros-fastapi = { workspace = true }
+droneey-eros-fastmcp = { workspace = true }
+droneey-eros-wire = { workspace = true }
+
+# uv: the tools, pinned exactly
+[dependency-groups]
+dev = [
+  "anyio==4.15.1",
+  "complexipy==8.0.1",
+  "deptry==0.25.1",
+  "droneey-eros",
+  "droneey-eros-fastapi",
+  "droneey-eros-fastmcp",
+  "droneey-eros-wire",
+  "httpx==0.28.1",
+  "hypothesis==6.168.3",
+  "import-linter==2.15",
+  "mutmut==3.8.0",
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "pytest-randomly==5.0.0",
+  "pytest-timeout==2.4.0",
+  "pyyaml==6.0.3",
+  "ruff==0.16.9",
+  "ty==0.0.84",
+  "vulture==2.16",
+]
+
+# ruff: the constitution's chain of parts; packages/eros/python/fastapi extends FastAPI's
+[tool.ruff]
+extend = ".droneey/constitution/presets/python/ruff/foundation/pytest.toml"
+src = ["packages/*/python/*/src", "packages/*/python/*/tests"]
+# The workspace root has no requires-python to infer it from: the packages' floor.
+target-version = "py314"
+
+# ruff: what the specs lift
+[tool.ruff.lint.extend-per-file-ignores]
+"packages/*/python/*/tests/**" = [
+  "INP001",
+  "S101",
+]

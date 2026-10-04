@@ -1,0 +1,7 @@
+[test]
+preload = ["./libs/__tests__/sandbox.fixtures.ts"]
+pathIgnorePatterns = [".droneey/**", ".venv/**", "tests/**", "**/*.integration.test.*"]
+coverage = false
+
+[run]
+bun = true

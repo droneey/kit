@@ -1,0 +1,54 @@
+{
+  "name": "@droneey/kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runtime packages for TypeScript and Python, each with the constitution's rules for its slice.",
+  "license": "MIT",
+  "author": {
+    "name": "Dmytro Kurovskyi",
+    "url": "https://kurovskyi.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/droneey/kit.git"
+  },
+  "type": "module",
+  "scripts": {
+    "format:check": "uv run --locked ruff format --check",
+    "format:fix": "uv run --locked ruff format",
+    "lint:check": "biome check --error-on-warnings && uv run --locked ruff check",
+    "lint:fix": "biome check --write && uv run --locked ruff check --fix",
+    "packages:check": "syncpack lint && syncpack format --check",
+    "packages:fix": "syncpack fix && syncpack format",
+    "type:check": "tsc --noEmit && bun run --filter './packages/*/typescript/*' type:check && uv run --locked ty check --config-file .droneey/constitution/presets/python/ty/foundation/self.toml -c 'environment.extra-paths=[\"packages/eros/python/core/tests\", \"packages/eros/python/wire/tests\", \"packages/eros/python/fastapi/tests\", \"packages/eros/python/fastmcp/tests\"]'",
+    "code:check": "uv run --locked python .droneey/constitution/tools/python-check/dist/python-check.pyz packages/*/python/*/src packages/*/python/*/tests",
+    "complexity:check": "for package in packages/*/python/*; do uv run --locked --directory \"$package\" --project ../../../.. complexipy src tests || exit 1; done",
+    "architecture:check": "depcruise packages libs --config .dependency-cruiser.mjs && bun run --filter './packages/*/typescript/*' architecture:check && for package in packages/*/python/*; do uv run --locked --directory \"$package\" --project ../../../.. lint-imports --no-logo || exit 1; done",
+    "test:check": "CI=1 bun test && for package in packages/*/python/*; do uv run --locked --directory \"$package\" --project ../../../.. pytest --cov || exit 1; done",
+    "mutation:check": "bun .droneey/constitution/tools/mutation-check/dist/main.js && for package in packages/*/python/*; do uv run --locked --directory \"$package\" --project ../../../.. python ../../../../.droneey/constitution/tools/mutmut-check/dist/mutmut-check.pyz || exit 1; done",
+    "mutation:all": "bun .droneey/constitution/tools/mutation-check/dist/main.js all && for package in packages/*/python/*; do uv run --locked --directory \"$package\" --project ../../../.. python ../../../../.droneey/constitution/tools/mutmut-check/dist/mutmut-check.pyz all || exit 1; done",
+    "secrets:check": "betterleaks git . --redact --no-banner && betterleaks git . --pre-commit --redact --no-banner && betterleaks git . --pre-commit --staged --redact --no-banner",
+    "names:check": "ls-lint --config .droneey/constitution/presets/common/ls-lint/foundation/self.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/core.yaml --config .droneey/constitution/presets/typescript/ls-lint/foundation/typescript.yaml --config .droneey/constitution/presets/python/ls-lint/foundation/python.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/git.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/mise.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/stryker.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/uv.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/ruff.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/pytest.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/hypothesis.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/mutmut.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/import-linter.yaml --config .droneey/constitution/presets/common/ls-lint/foundation/complexipy.yaml --config .droneey/constitution/presets/typescript/ls-lint/architecture/core.yaml --config .droneey/constitution/presets/python/ls-lint/architecture/core.yaml --config .ls-lint.yaml",
+    "unused:check": "knip --no-config-hints && knip --strict --no-config-hints && for package in packages/*/python/*; do uv run --locked --directory \"$package\" --project ../../../.. vulture || exit 1; done",
+    "dependencies:check": "for package in packages/*/python/*; do uv run --locked --directory \"$package\" --project ../../../.. deptry src || exit 1; done",
+    "audit:check": "osv-scanner scan source --licenses=\"$(paste -sd, .droneey/constitution/presets/common/osv-scanner/foundation/core.txt)\" --no-ignore .",
+    "check": "bun run format:check && bun run lint:check && bun run packages:check && bun run type:check && bun run code:check && bun run complexity:check && bun run architecture:check && bun run test:check && bun run mutation:check && bun run secrets:check && bun run names:check && bun run unused:check && bun run dependencies:check && bun run audit:check"
+  },
+  "workspaces": [
+    "packages/*/typescript/*"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.13",
+    "@stryker-mutator/core": "^10.0.0",
+    "@swc/core": "^1.16.2",
+    "@types/bun": "^1.4.1",
+    "@types/node": "^26",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "dependency-cruiser": "^18.4.0",
+    "knip": "^6.38.0",
+    "syncpack": "^15.3.3",
+    "typescript": "^7.0.2"
+  },
+  "trustedDependencies": []
+}

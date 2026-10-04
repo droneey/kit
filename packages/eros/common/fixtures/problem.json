@@ -1,0 +1,665 @@
+{
+  "operation": "problem",
+  "description": "toProblem: an error, with the application's typeBase and trace id when it sets them, becomes the RFC 9457 body the client receives.",
+  "cases": [
+    {
+      "name": "should give the code, the kind's title and status and the message as detail when the error is expected",
+      "input": {
+        "error": {
+          "kind": "not-found",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          },
+          "message": "Order 42 not found."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Order 42 not found.",
+        "code": "orders/order/not-found",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should add the trace id when the application gives one",
+      "input": {
+        "error": {
+          "kind": "not-found",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          },
+          "message": "Order 42 not found."
+        },
+        "traceId": "4bf92f35"
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Order 42 not found.",
+        "code": "orders/order/not-found",
+        "isRetryable": false,
+        "traceId": "4bf92f35"
+      }
+    },
+    {
+      "name": "should give the type as the type base and the code when the application sets a type base",
+      "input": {
+        "error": {
+          "kind": "not-found",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          },
+          "message": "Order 42 not found."
+        },
+        "typeBase": "https://errors.example.com"
+      },
+      "expected": {
+        "type": "https://errors.example.com/orders/order/not-found",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Order 42 not found.",
+        "code": "orders/order/not-found",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should keep the class's reason in the type when the code has one",
+      "input": {
+        "error": {
+          "kind": "not-found",
+          "meta": {
+            "module": "orders",
+            "entity": "order",
+            "reason": "archived"
+          },
+          "message": "Order 42 is archived."
+        },
+        "typeBase": "https://errors.example.com"
+      },
+      "expected": {
+        "type": "https://errors.example.com/orders/order/not-found/archived",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Order 42 is archived.",
+        "code": "orders/order/not-found/archived",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give 422 and a code with the kind and the reason when the kind is violation",
+      "input": {
+        "error": {
+          "kind": "violation",
+          "meta": {
+            "module": "orders",
+            "entity": "order",
+            "reason": "already-paid"
+          },
+          "message": "Order 42 is already paid."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Unprocessable Content",
+        "status": 422,
+        "detail": "Order 42 is already paid.",
+        "code": "orders/order/violation/already-paid",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the errors when the kind is validation",
+      "input": {
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#/items/0/quantity",
+                "code": "invalid-format",
+                "detail": "must be a positive integer"
+              },
+              {
+                "pointer": "#/email",
+                "code": "required",
+                "detail": "is required"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "Validation failed.",
+        "code": "validation",
+        "isRetryable": false,
+        "errors": [
+          {
+            "pointer": "#/items/0/quantity",
+            "code": "invalid-format",
+            "detail": "must be a positive integer"
+          },
+          {
+            "pointer": "#/email",
+            "code": "required",
+            "detail": "is required"
+          }
+        ]
+      }
+    },
+    {
+      "name": "should give an error at the root pointer when the body is not JSON",
+      "input": {
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#",
+                "code": "invalid-json",
+                "detail": "is not valid JSON"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "Validation failed.",
+        "code": "validation",
+        "isRetryable": false,
+        "errors": [
+          {
+            "pointer": "#",
+            "code": "invalid-json",
+            "detail": "is not valid JSON"
+          }
+        ]
+      }
+    },
+    {
+      "name": "should leave other details out of the body when the kind is not validation",
+      "input": {
+        "error": {
+          "kind": "not-found",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          },
+          "message": "Order 42 not found.",
+          "details": {
+            "orderId": "42"
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Order 42 not found.",
+        "code": "orders/order/not-found",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the retry delay in whole seconds when the error sets one",
+      "input": {
+        "error": {
+          "kind": "rate-limited",
+          "message": "Too many requests.",
+          "retryAfterSeconds": 30
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Too Many Requests",
+        "status": 429,
+        "detail": "Too many requests.",
+        "code": "rate-limited",
+        "isRetryable": true,
+        "retryAfterSeconds": 30
+      }
+    },
+    {
+      "name": "should round the retry delay up when it is a fraction of a second over",
+      "input": {
+        "error": {
+          "kind": "unavailable",
+          "message": "Payments are unavailable.",
+          "retryAfterSeconds": 1.2
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Service Unavailable",
+        "status": 503,
+        "detail": "Payments are unavailable.",
+        "code": "unavailable",
+        "isRetryable": true,
+        "retryAfterSeconds": 2
+      }
+    },
+    {
+      "name": "should round the retry delay up to one second when it is under a second",
+      "input": {
+        "error": {
+          "kind": "timeout",
+          "message": "Payments did not answer.",
+          "retryAfterSeconds": 0.001
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Gateway Timeout",
+        "status": 504,
+        "detail": "Payments did not answer.",
+        "code": "timeout",
+        "isRetryable": true,
+        "retryAfterSeconds": 1
+      }
+    },
+    {
+      "name": "should give a retry delay of zero when the error sets zero",
+      "input": {
+        "error": {
+          "kind": "rate-limited",
+          "message": "Too many requests.",
+          "retryAfterSeconds": 0
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Too Many Requests",
+        "status": 429,
+        "detail": "Too many requests.",
+        "code": "rate-limited",
+        "isRetryable": true,
+        "retryAfterSeconds": 0
+      }
+    },
+    {
+      "name": "should give the error's own isRetryable when it overrides the kind's",
+      "input": {
+        "error": {
+          "kind": "conflict",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          },
+          "message": "Order 42 is being updated.",
+          "isRetryable": true
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Conflict",
+        "status": 409,
+        "detail": "Order 42 is being updated.",
+        "code": "orders/order/conflict",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give isRetryable false when a retryable kind's error overrides it",
+      "input": {
+        "error": {
+          "kind": "unavailable",
+          "message": "The region is closed.",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Service Unavailable",
+        "status": 503,
+        "detail": "The region is closed.",
+        "code": "unavailable",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give 401 and its title when the kind is unauthorized",
+      "input": {
+        "error": {
+          "kind": "unauthorized",
+          "message": "The token has expired."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Unauthorized",
+        "status": 401,
+        "detail": "The token has expired.",
+        "code": "unauthorized",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give 403 and its title when the kind is forbidden",
+      "input": {
+        "error": {
+          "kind": "forbidden",
+          "message": "Only the owner may cancel the order."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "Only the owner may cancel the order.",
+        "code": "forbidden",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give 410 and its title when the kind is expired",
+      "input": {
+        "error": {
+          "kind": "expired",
+          "message": "The invitation has expired."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Gone",
+        "status": 410,
+        "detail": "The invitation has expired.",
+        "code": "expired",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give 413 and its title when the kind is payload-too-large",
+      "input": {
+        "error": {
+          "kind": "payload-too-large",
+          "message": "The file is over 10 MB."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Content Too Large",
+        "status": 413,
+        "detail": "The file is over 10 MB.",
+        "code": "payload-too-large",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should mask the error when it is unexpected",
+      "input": {
+        "error": {
+          "kind": "internal",
+          "message": "Order 42 has no items."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "An unexpected error occurred.",
+        "code": "internal",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should keep the trace id when it masks an unexpected error",
+      "input": {
+        "error": {
+          "kind": "internal",
+          "message": "Order 42 has no items."
+        },
+        "traceId": "4bf92f35"
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "An unexpected error occurred.",
+        "code": "internal",
+        "isRetryable": false,
+        "traceId": "4bf92f35"
+      }
+    },
+    {
+      "name": "should give the type base and internal as the type when it masks an error and the application sets a type base",
+      "input": {
+        "error": {
+          "kind": "internal",
+          "message": "Order 42 has no items."
+        },
+        "typeBase": "https://errors.example.com"
+      },
+      "expected": {
+        "type": "https://errors.example.com/internal",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "An unexpected error occurred.",
+        "code": "internal",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should mask the error and drop its cause when an unexpected error wraps a vendor's",
+      "input": {
+        "error": {
+          "kind": "internal",
+          "message": "Stripe refused our key.",
+          "cause": {
+            "foreign": {
+              "name": "StripeAuthenticationError",
+              "message": "Invalid API Key provided."
+            }
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "An unexpected error occurred.",
+        "code": "internal",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should mask the error when it is not of eros",
+      "input": {
+        "error": {
+          "foreign": {
+            "name": "TypeError",
+            "message": "Cannot read properties of undefined (reading 'id')"
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Internal Server Error",
+        "status": 500,
+        "detail": "An unexpected error occurred.",
+        "code": "internal",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should drop the cause when an expected error has one",
+      "input": {
+        "error": {
+          "kind": "conflict",
+          "meta": {
+            "module": "users",
+            "entity": "user",
+            "reason": "email-taken"
+          },
+          "message": "The email is taken.",
+          "cause": {
+            "foreign": {
+              "name": "UniqueViolationError",
+              "message": "duplicate key value violates unique constraint \"users_email_key\""
+            }
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Conflict",
+        "status": 409,
+        "detail": "The email is taken.",
+        "code": "users/user/conflict/email-taken",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give an empty list of errors when a ValidationError has none",
+      "input": {
+        "error": {
+          "kind": "validation",
+          "message": "Validation failed."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "Validation failed.",
+        "code": "validation",
+        "isRetryable": false,
+        "errors": []
+      }
+    },
+    {
+      "name": "should leave the trace id out when it is empty",
+      "input": {
+        "error": {
+          "kind": "not-found",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          },
+          "message": "Order 42 not found."
+        },
+        "traceId": ""
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Order 42 not found.",
+        "code": "orders/order/not-found",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the kind's default text as detail when the error sets no message",
+      "input": {
+        "error": {
+          "kind": "not-found",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Resource not found.",
+        "code": "orders/order/not-found",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give 422 and a code without a reason when a violation has none",
+      "input": {
+        "error": {
+          "kind": "violation",
+          "meta": {
+            "module": "orders",
+            "entity": "order"
+          },
+          "message": "Order 42 cannot be changed."
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Unprocessable Content",
+        "status": 422,
+        "detail": "Order 42 cannot be changed.",
+        "code": "orders/order/violation",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the kind and the reason as the code when meta has only a reason",
+      "input": {
+        "error": {
+          "kind": "validation",
+          "meta": {
+            "reason": "missing-body"
+          },
+          "message": "The body is missing.",
+          "details": {
+            "errors": [
+              {
+                "pointer": "#",
+                "code": "required",
+                "detail": "is required"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "type": "about:blank",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "The body is missing.",
+        "code": "validation/missing-body",
+        "isRetryable": false,
+        "errors": [
+          {
+            "pointer": "#",
+            "code": "required",
+            "detail": "is required"
+          }
+        ]
+      }
+    },
+    {
+      "name": "should give the type base and the whole code as the type when a violation's code has a reason",
+      "input": {
+        "error": {
+          "kind": "violation",
+          "meta": {
+            "module": "orders",
+            "entity": "order",
+            "reason": "already-paid"
+          },
+          "message": "Order 42 is already paid."
+        },
+        "typeBase": "https://errors.example.com"
+      },
+      "expected": {
+        "type": "https://errors.example.com/orders/order/violation/already-paid",
+        "title": "Unprocessable Content",
+        "status": 422,
+        "detail": "Order 42 is already paid.",
+        "code": "orders/order/violation/already-paid",
+        "isRetryable": false
+      }
+    }
+  ]
+}

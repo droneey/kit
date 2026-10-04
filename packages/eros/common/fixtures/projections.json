@@ -1,0 +1,290 @@
+{
+  "operation": "projections",
+  "description": "An error's projection on each transport, found by its class's ancestry: its HTTP status, its gRPC status, its MCP outcome, its CLI exit code and its queue disposition. An error not of eros is internal. An expected error whose isRetryable differs from its kind's default goes to retry when it is true and to dead-letter when it is false.",
+  "cases": [
+    {
+      "name": "should give the projections of validation when the kind is validation",
+      "input": {
+        "kind": "validation"
+      },
+      "expected": {
+        "http": 400,
+        "grpc": "INVALID_ARGUMENT",
+        "mcp": "tool-error",
+        "exitCode": 64,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of unauthorized when the kind is unauthorized",
+      "input": {
+        "kind": "unauthorized"
+      },
+      "expected": {
+        "http": 401,
+        "grpc": "UNAUTHENTICATED",
+        "mcp": "tool-error",
+        "exitCode": 77,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of forbidden when the kind is forbidden",
+      "input": {
+        "kind": "forbidden"
+      },
+      "expected": {
+        "http": 403,
+        "grpc": "PERMISSION_DENIED",
+        "mcp": "tool-error",
+        "exitCode": 77,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of not-found when the kind is not-found",
+      "input": {
+        "kind": "not-found"
+      },
+      "expected": {
+        "http": 404,
+        "grpc": "NOT_FOUND",
+        "mcp": "tool-error",
+        "exitCode": 66,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of conflict when the kind is conflict",
+      "input": {
+        "kind": "conflict"
+      },
+      "expected": {
+        "http": 409,
+        "grpc": "ABORTED",
+        "mcp": "tool-error",
+        "exitCode": 65,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of expired when the kind is expired",
+      "input": {
+        "kind": "expired"
+      },
+      "expected": {
+        "http": 410,
+        "grpc": "FAILED_PRECONDITION",
+        "mcp": "tool-error",
+        "exitCode": 65,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of payload-too-large when the kind is payload-too-large",
+      "input": {
+        "kind": "payload-too-large"
+      },
+      "expected": {
+        "http": 413,
+        "grpc": "RESOURCE_EXHAUSTED",
+        "mcp": "tool-error",
+        "exitCode": 65,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of violation when the kind is violation",
+      "input": {
+        "kind": "violation"
+      },
+      "expected": {
+        "http": 422,
+        "grpc": "FAILED_PRECONDITION",
+        "mcp": "tool-error",
+        "exitCode": 65,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of rate-limited when the kind is rate-limited",
+      "input": {
+        "kind": "rate-limited"
+      },
+      "expected": {
+        "http": 429,
+        "grpc": "RESOURCE_EXHAUSTED",
+        "mcp": "tool-error",
+        "exitCode": 75,
+        "queue": "retry"
+      }
+    },
+    {
+      "name": "should give the projections of unavailable when the kind is unavailable",
+      "input": {
+        "kind": "unavailable"
+      },
+      "expected": {
+        "http": 503,
+        "grpc": "UNAVAILABLE",
+        "mcp": "tool-error",
+        "exitCode": 69,
+        "queue": "retry"
+      }
+    },
+    {
+      "name": "should give the projections of timeout when the kind is timeout",
+      "input": {
+        "kind": "timeout"
+      },
+      "expected": {
+        "http": 504,
+        "grpc": "DEADLINE_EXCEEDED",
+        "mcp": "tool-error",
+        "exitCode": 75,
+        "queue": "retry-if-idempotent"
+      }
+    },
+    {
+      "name": "should give the projections of internal when the kind is internal",
+      "input": {
+        "kind": "internal",
+        "message": "Order has no items."
+      },
+      "expected": {
+        "http": 500,
+        "grpc": "INTERNAL",
+        "mcp": "internal-error",
+        "exitCode": 70,
+        "queue": "dead-letter-and-alert"
+      }
+    },
+    {
+      "name": "should give the kind's projections when the error is of a subclass of the kind",
+      "input": {
+        "kind": "not-found",
+        "class": "OrderNotFoundError",
+        "meta": {
+          "module": "orders",
+          "entity": "order"
+        }
+      },
+      "expected": {
+        "http": 404,
+        "grpc": "NOT_FOUND",
+        "mcp": "tool-error",
+        "exitCode": 66,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the kind's projections when the subclass adds a reason",
+      "input": {
+        "kind": "not-found",
+        "class": "OrderArchivedError",
+        "meta": {
+          "module": "orders",
+          "entity": "order",
+          "reason": "archived"
+        }
+      },
+      "expected": {
+        "http": 404,
+        "grpc": "NOT_FOUND",
+        "mcp": "tool-error",
+        "exitCode": 66,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should give the projections of internal when the error is not of eros",
+      "input": {
+        "foreign": {
+          "name": "TypeError",
+          "message": "Cannot read properties of undefined (reading 'id')"
+        }
+      },
+      "expected": {
+        "http": 500,
+        "grpc": "INTERNAL",
+        "mcp": "internal-error",
+        "exitCode": 70,
+        "queue": "dead-letter-and-alert"
+      }
+    },
+    {
+      "name": "should send the error to retry when an error of a kind not retried sets isRetryable",
+      "input": {
+        "kind": "conflict",
+        "meta": {
+          "module": "orders",
+          "entity": "order"
+        },
+        "isRetryable": true
+      },
+      "expected": {
+        "http": 409,
+        "grpc": "ABORTED",
+        "mcp": "tool-error",
+        "exitCode": 65,
+        "queue": "retry"
+      }
+    },
+    {
+      "name": "should send the error to dead letter when an error of a retried kind clears isRetryable",
+      "input": {
+        "kind": "unavailable",
+        "isRetryable": false
+      },
+      "expected": {
+        "http": 503,
+        "grpc": "UNAVAILABLE",
+        "mcp": "tool-error",
+        "exitCode": 69,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should send the error to dead letter when a timeout clears isRetryable",
+      "input": {
+        "kind": "timeout",
+        "isRetryable": false
+      },
+      "expected": {
+        "http": 504,
+        "grpc": "DEADLINE_EXCEEDED",
+        "mcp": "tool-error",
+        "exitCode": 75,
+        "queue": "dead-letter"
+      }
+    },
+    {
+      "name": "should keep the kind's queue disposition when a timeout sets isRetryable to the kind's default",
+      "input": {
+        "kind": "timeout",
+        "isRetryable": true
+      },
+      "expected": {
+        "http": 504,
+        "grpc": "DEADLINE_EXCEEDED",
+        "mcp": "tool-error",
+        "exitCode": 75,
+        "queue": "retry-if-idempotent"
+      }
+    },
+    {
+      "name": "should keep the kind's queue disposition when an error sets isRetryable to the kind's default",
+      "input": {
+        "kind": "not-found",
+        "isRetryable": false
+      },
+      "expected": {
+        "http": 404,
+        "grpc": "NOT_FOUND",
+        "mcp": "tool-error",
+        "exitCode": 66,
+        "queue": "dead-letter"
+      }
+    }
+  ]
+}

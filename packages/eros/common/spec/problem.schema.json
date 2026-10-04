@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/droneey/kit/main/packages/eros/common/spec/problem.schema.json",
+  "title": "eros problem",
+  "description": "The RFC 9457 problem body eros sends for an error. Its media type is application/problem+json.",
+  "type": "object",
+  "required": [
+    "type",
+    "title",
+    "status",
+    "detail",
+    "code",
+    "isRetryable"
+  ],
+  "properties": {
+    "type": {
+      "description": "about:blank, or <typeBase>/<code> when the application sets a typeBase.",
+      "type": "string",
+      "format": "uri-reference"
+    },
+    "title": {
+      "description": "The title of the error's kind, the same for every error of the kind.",
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "description": "The HTTP status of the error's kind.",
+      "enum": [
+        400,
+        401,
+        403,
+        404,
+        409,
+        410,
+        413,
+        422,
+        429,
+        500,
+        503,
+        504
+      ]
+    },
+    "detail": {
+      "description": "The error's message: what happened this time.",
+      "type": "string"
+    },
+    "code": {
+      "description": "[<module>/<entity>/]<kind>[/<reason>], each segment in lower kebab case: orders/order/violation/already-paid. The contract a client branches on.",
+      "type": "string",
+      "pattern": "^([a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*/)?(validation|unauthorized|forbidden|not-found|conflict|expired|payload-too-large|violation|rate-limited|unavailable|timeout|internal)(/[a-z0-9]+(-[a-z0-9]+)*)?$"
+    },
+    "isRetryable": {
+      "description": "Whether the same request may succeed when it is sent again.",
+      "type": "boolean"
+    },
+    "retryAfterSeconds": {
+      "description": "How long to wait before a retry, in whole seconds rounded up. Present only when the error sets it.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "traceId": {
+      "description": "The trace of the request, when the application gives eros a way to read it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "errors": {
+      "description": "What failed validation, one item per failure.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/validationFailure"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "dependencies": {
+    "errors": {
+      "properties": {
+        "status": {
+          "const": 400
+        }
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "status": {
+        "const": 500
+      }
+    }
+  },
+  "then": {
+    "description": "An unexpected error is always masked.",
+    "properties": {
+      "title": {
+        "const": "Internal Server Error"
+      },
+      "detail": {
+        "const": "An unexpected error occurred."
+      },
+      "code": {
+        "const": "internal"
+      },
+      "isRetryable": {
+        "const": false
+      },
+      "retryAfterSeconds": false,
+      "errors": false
+    }
+  },
+  "else": {
+    "description": "Only an unexpected error has the kind internal.",
+    "properties": {
+      "code": {
+        "not": {
+          "type": "string",
+          "pattern": "^([^/]+/[^/]+/)?internal(/[^/]+)?$"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "validationFailure": {
+      "type": "object",
+      "required": [
+        "pointer",
+        "code",
+        "detail"
+      ],
+      "properties": {
+        "pointer": {
+          "description": "The failed member, as an RFC 6901 JSON Pointer in URI fragment form: #/items/0/quantity.",
+          "type": "string",
+          "pattern": "^#(/([^/~]|~[01])*)*$"
+        },
+        "code": {
+          "description": "What the member failed, in lower kebab case: invalid-format.",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "detail": {
+          "description": "The failure in words.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

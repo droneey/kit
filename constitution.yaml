@@ -1,0 +1,16 @@
+version: 0.65.3
+
+axes: [foundation, architecture, workflow]
+domains: [version-control, package]
+platforms: []
+languages: [typescript, python]
+implementations: [bun, bun-test, tsc, biome, dependency-cruiser, syncpack, stryker, git, lefthook, betterleaks, mise, ls-lint, knip, osv-scanner, uv, ruff, ty, pytest, hypothesis, mutmut, import-linter, deptry, vulture, complexipy, python-check]
+apps:
+  packages/eros/typescript/nestjs:
+    implementations: [nestjs]
+  packages/eros/python/fastapi:
+    implementations: [pydantic, fastapi]
+  packages/eros/python/fastmcp:
+    implementations: [pydantic, fastmcp]
+check: bun run check
+overrides: []

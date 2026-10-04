@@ -1,0 +1,167 @@
+[project]
+name = "droneey-eros-wire"
+version = "0.0.0"
+description = "eros on the transports: the problem, HTTP and gRPC statuses, exit codes, queues and MCP."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Dmytro Kurovskyi" }]
+requires-python = ">=3.14"
+dependencies = [
+  "droneey-eros",
+]
+
+[project.urls]
+Homepage = "https://github.com/droneey/kit/tree/main/packages/eros/python/wire#readme"
+Issues = "https://github.com/droneey/kit/issues"
+Repository = "https://github.com/droneey/kit"
+
+[tool.uv.sources]
+droneey-eros = { workspace = true }
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+# pytest: the specs, strict and offline, in a random order
+[tool.pytest]
+minversion = "9.1"
+strict = true
+testpaths = ["tests"]
+pythonpath = ["tests"]
+# The hidden folders stay out as by default, or Hypothesis warns of .hypothesis/ and fails the run.
+norecursedirs = [".*", "integration", "e2e"]
+addopts = ["-ra", "--import-mode=importlib"]
+filterwarnings = ["error"]
+anyio_mode = "auto"
+timeout = "10"
+
+# pytest: the coverage gate, with branches
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = ["**/main.py", "**/entrypoints/*/main.py", "**/root/wiring.py", "**/*_gen.py"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = true
+exclude_also = ["if TYPE_CHECKING:", "@overload", "assert_never\\("]
+
+# mutmut: the mutants, each one killed
+[tool.mutmut]
+source_paths = ["src"]
+do_not_mutate = ["*/main.py", "*/root/wiring.py", "*_gen.py"]
+pytest_add_cli_args = ["-p", "no:randomly"]
+type_check_command = ["ty", "check", "--output-format", "gitlab"]
+
+# import-linter: core's import rules, by the folders of its anatomy
+[tool.importlinter]
+root_packages = ["droneey_eros_wire"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "no-import-cycles"
+type = "acyclic_siblings"
+ancestors = ["droneey_eros_wire"]
+
+[[tool.importlinter.contracts]]
+name = "kernel-imports-only-itself"
+type = "forbidden"
+source_modules = ["*.kernel"]
+forbidden_modules = ["*.adapters", "*.composition", "*.contracts", "*.entrypoints", "*.features", "*.libs", "*.root", "*.shared"]
+
+[[tool.importlinter.contracts]]
+name = "libs-import-no-application-code"
+type = "forbidden"
+source_modules = ["*.libs"]
+forbidden_modules = ["*.adapters", "*.composition", "*.contracts", "*.entrypoints", "*.features", "*.kernel", "*.root", "*.shared"]
+
+[[tool.importlinter.contracts]]
+name = "shared-imports-no-feature-or-root"
+type = "forbidden"
+source_modules = ["*.shared"]
+forbidden_modules = ["*.adapters", "*.contracts", "*.features", "*.root"]
+
+[[tool.importlinter.contracts]]
+name = "contracts-know-no-vendor-or-other-contract"
+type = "forbidden"
+source_modules = ["*.contracts"]
+forbidden_modules = ["*.adapters", "*.composition", "*.entrypoints", "*.features", "*.root", "*.shared"]
+
+[[tool.importlinter.contracts]]
+name = "domain-imports-only-itself-and-kernel"
+type = "forbidden"
+source_modules = ["*.features.*.domain"]
+forbidden_modules = ["*.adapters", "*.composition", "*.entrypoints", "*.features.*.adapters", "*.features.*.app", "*.libs", "*.root", "*.shared"]
+
+[[tool.importlinter.contracts]]
+name = "features-blind-to-each-other"
+type = "independence"
+modules = ["*.features.*"]
+
+[[tool.importlinter.contracts]]
+name = "adapters-never-import-each-other-or-callers"
+type = "independence"
+modules = ["*.adapters.*", "*.features.*.adapters.*"]
+
+[[tool.importlinter.contracts]]
+name = "adapters-never-import-each-other-or-callers"
+type = "forbidden"
+source_modules = ["*.adapters", "*.features.*.adapters"]
+forbidden_modules = ["*.composition", "*.entrypoints", "*.features.*.app", "*.root"]
+
+[[tool.importlinter.contracts]]
+name = "root-imported-only-by-entry-and-delivery-wiring"
+type = "protected"
+protected_modules = ["*.root"]
+allowed_importers = ["*.main", "*.entrypoints.*.main"]
+
+[[tool.importlinter.contracts]]
+name = "nothing-imports-an-entrypoint"
+type = "protected"
+protected_modules = ["*.entrypoints"]
+allowed_importers = []
+
+[[tool.importlinter.contracts]]
+name = "nothing-imports-an-entrypoint"
+type = "independence"
+modules = ["*.entrypoints.*"]
+
+# pydantic: the models kept out of the domain
+[[tool.importlinter.contracts]]
+name = "pydantic-kept-out-of-the-domain"
+type = "forbidden"
+source_modules = ["*.contracts", "*.features.*.domain", "*.kernel"]
+forbidden_modules = ["pydantic", "pydantic_settings"]
+allow_indirect_imports = true
+
+# structlog: configured by the root alone
+[[tool.importlinter.contracts]]
+name = "structlog-imported-only-by-the-root"
+type = "forbidden"
+source_modules = ["*.adapters", "*.composition", "*.contracts", "*.entrypoints", "*.features", "*.kernel", "*.libs", "*.shared"]
+forbidden_modules = ["structlog"]
+allow_indirect_imports = true
+
+# httpx2: the client kept to the edge
+[[tool.importlinter.contracts]]
+name = "httpx2-kept-to-the-edge"
+type = "forbidden"
+source_modules = ["*.composition", "*.contracts", "*.features.*.app", "*.features.*.domain", "*.kernel"]
+forbidden_modules = ["httpx2"]
+allow_indirect_imports = true
+
+# vulture: the code nothing in src/ uses
+[tool.vulture]
+paths = ["src"]
+min_confidence = 60
+ignore_names = [
+  "isRetryable",  # a key of Problem, the body a client receives, built as a dict
+  "retryAfterSeconds",  # a key of Problem, the body a client receives, built as a dict
+  "traceId",  # a key of Problem, the body a client receives, built as a dict
+]
+
+# complexipy: the cognitive complexity of a function
+[tool.complexipy]
+max-complexity-allowed = 10

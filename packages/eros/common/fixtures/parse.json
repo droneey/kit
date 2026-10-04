@@ -1,0 +1,676 @@
+{
+  "operation": "parse",
+  "description": "parseProblem: a response's status and body become an error again. A status of the kinds' table gives the kind; another 4xx with a problem body gives a ViolationError; anything else gives an UnexpectedError that holds the status and the body in its details. The body's code is kept as it is.",
+  "cases": [
+    {
+      "name": "should give the kind of the status with the body's code and detail when the status is in the table",
+      "input": {
+        "status": 404,
+        "body": {
+          "type": "about:blank",
+          "title": "Not Found",
+          "status": 404,
+          "detail": "Order 42 not found.",
+          "code": "orders/order/not-found",
+          "isRetryable": false,
+          "traceId": "4bf92f35"
+        }
+      },
+      "expected": {
+        "kind": "not-found",
+        "code": "orders/order/not-found",
+        "message": "Order 42 not found.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give a ViolationError with the body's code when the status is 422",
+      "input": {
+        "status": 422,
+        "body": {
+          "type": "about:blank",
+          "title": "Unprocessable Content",
+          "status": 422,
+          "detail": "Order 42 is already paid.",
+          "code": "orders/order/violation/already-paid",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "kind": "violation",
+        "code": "orders/order/violation/already-paid",
+        "message": "Order 42 is already paid.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the errors as details when the body has errors",
+      "input": {
+        "status": 400,
+        "body": {
+          "type": "about:blank",
+          "title": "Bad Request",
+          "status": 400,
+          "detail": "Validation failed.",
+          "code": "validation",
+          "isRetryable": false,
+          "errors": [
+            {
+              "pointer": "#/items/0/quantity",
+              "code": "invalid-format",
+              "detail": "must be a positive integer"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "validation",
+        "code": "validation",
+        "message": "Validation failed.",
+        "isRetryable": false,
+        "details": {
+          "errors": [
+            {
+              "pointer": "#/items/0/quantity",
+              "code": "invalid-format",
+              "detail": "must be a positive integer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "should give the retry delay when the body has one",
+      "input": {
+        "status": 429,
+        "body": {
+          "type": "about:blank",
+          "title": "Too Many Requests",
+          "status": 429,
+          "detail": "Too many requests.",
+          "code": "rate-limited",
+          "isRetryable": true,
+          "retryAfterSeconds": 30
+        }
+      },
+      "expected": {
+        "kind": "rate-limited",
+        "code": "rate-limited",
+        "message": "Too many requests.",
+        "isRetryable": true,
+        "retryAfterSeconds": 30
+      }
+    },
+    {
+      "name": "should give the body's isRetryable when it differs from the kind's",
+      "input": {
+        "status": 409,
+        "body": {
+          "type": "about:blank",
+          "title": "Conflict",
+          "status": 409,
+          "detail": "Order 42 is being updated.",
+          "code": "orders/order/conflict",
+          "isRetryable": true
+        }
+      },
+      "expected": {
+        "kind": "conflict",
+        "code": "orders/order/conflict",
+        "message": "Order 42 is being updated.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give the kind's isRetryable when the body has none",
+      "input": {
+        "status": 503,
+        "body": {
+          "title": "Service Unavailable",
+          "status": 503,
+          "detail": "Payments are unavailable.",
+          "code": "unavailable"
+        }
+      },
+      "expected": {
+        "kind": "unavailable",
+        "code": "unavailable",
+        "message": "Payments are unavailable.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give an UnauthorizedError when the status is 401",
+      "input": {
+        "status": 401,
+        "body": {
+          "detail": "The token has expired.",
+          "code": "unauthorized",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "kind": "unauthorized",
+        "code": "unauthorized",
+        "message": "The token has expired.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give a ForbiddenError when the status is 403",
+      "input": {
+        "status": 403,
+        "body": {
+          "detail": "Only the owner may cancel the order.",
+          "code": "forbidden",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "kind": "forbidden",
+        "code": "forbidden",
+        "message": "Only the owner may cancel the order.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give an ExpiredError when the status is 410",
+      "input": {
+        "status": 410,
+        "body": {
+          "detail": "The invitation has expired.",
+          "code": "expired",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "kind": "expired",
+        "code": "expired",
+        "message": "The invitation has expired.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give a PayloadTooLargeError when the status is 413",
+      "input": {
+        "status": 413,
+        "body": {
+          "detail": "The file is over 10 MB.",
+          "code": "payload-too-large",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "kind": "payload-too-large",
+        "code": "payload-too-large",
+        "message": "The file is over 10 MB.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give a TimeoutError when the status is 504",
+      "input": {
+        "status": 504,
+        "body": {
+          "detail": "Payments did not answer.",
+          "code": "timeout",
+          "isRetryable": true
+        }
+      },
+      "expected": {
+        "kind": "timeout",
+        "code": "timeout",
+        "message": "Payments did not answer.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give an UnexpectedError with the masked detail when the status is 500",
+      "input": {
+        "status": 500,
+        "body": {
+          "type": "about:blank",
+          "title": "Internal Server Error",
+          "status": 500,
+          "detail": "An unexpected error occurred.",
+          "code": "internal",
+          "isRetryable": false,
+          "traceId": "4bf92f35"
+        }
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "An unexpected error occurred.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give a ViolationError with the body's code when a 4xx status is not in the table",
+      "input": {
+        "status": 418,
+        "body": {
+          "type": "about:blank",
+          "title": "I'm a teapot",
+          "status": 418,
+          "detail": "Coffee is not served here.",
+          "code": "kitchen/kettle/teapot",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "kind": "violation",
+        "code": "kitchen/kettle/teapot",
+        "message": "Coffee is not served here.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give a ViolationError when the status is 405",
+      "input": {
+        "status": 405,
+        "body": {
+          "detail": "DELETE is not allowed on orders.",
+          "code": "method-not-allowed"
+        }
+      },
+      "expected": {
+        "kind": "violation",
+        "code": "method-not-allowed",
+        "message": "DELETE is not allowed on orders.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give an UnexpectedError with the status and the body when a 5xx status is not in the table",
+      "input": {
+        "status": 502,
+        "body": {
+          "type": "about:blank",
+          "title": "Bad Gateway",
+          "status": 502,
+          "detail": "The upstream failed.",
+          "code": "bad-gateway",
+          "isRetryable": true
+        }
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 502.",
+        "isRetryable": false,
+        "details": {
+          "status": 502,
+          "body": {
+            "type": "about:blank",
+            "title": "Bad Gateway",
+            "status": 502,
+            "detail": "The upstream failed.",
+            "code": "bad-gateway",
+            "isRetryable": true
+          }
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when the body is text",
+      "input": {
+        "status": 502,
+        "body": "<html><body>Bad Gateway</body></html>"
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 502.",
+        "isRetryable": false,
+        "details": {
+          "status": 502,
+          "body": "<html><body>Bad Gateway</body></html>"
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when a status in the table comes with a body that is not a problem",
+      "input": {
+        "status": 404,
+        "body": {
+          "message": "Cannot GET /orders/42"
+        }
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 404.",
+        "isRetryable": false,
+        "details": {
+          "status": 404,
+          "body": {
+            "message": "Cannot GET /orders/42"
+          }
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when a 4xx status not in the table comes with a body that is not a problem",
+      "input": {
+        "status": 418,
+        "body": "I'm a teapot"
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 418.",
+        "isRetryable": false,
+        "details": {
+          "status": 418,
+          "body": "I'm a teapot"
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when the body has no code",
+      "input": {
+        "status": 404,
+        "body": {
+          "type": "about:blank",
+          "title": "Not Found",
+          "status": 404,
+          "detail": "Order 42 not found."
+        }
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 404.",
+        "isRetryable": false,
+        "details": {
+          "status": 404,
+          "body": {
+            "type": "about:blank",
+            "title": "Not Found",
+            "status": 404,
+            "detail": "Order 42 not found."
+          }
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when the body has no detail",
+      "input": {
+        "status": 404,
+        "body": {
+          "code": "orders/order/not-found"
+        }
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 404.",
+        "isRetryable": false,
+        "details": {
+          "status": 404,
+          "body": {
+            "code": "orders/order/not-found"
+          }
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when the body is empty",
+      "input": {
+        "status": 503,
+        "body": null
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 503.",
+        "isRetryable": false,
+        "details": {
+          "status": 503,
+          "body": null
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when the body is an array",
+      "input": {
+        "status": 400,
+        "body": [
+          {
+            "code": "validation",
+            "detail": "Validation failed."
+          }
+        ]
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 400.",
+        "isRetryable": false,
+        "details": {
+          "status": 400,
+          "body": [
+            {
+              "code": "validation",
+              "detail": "Validation failed."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "should give an empty list of errors when a validation body has none",
+      "input": {
+        "status": 400,
+        "body": {
+          "detail": "Validation failed.",
+          "code": "validation",
+          "isRetryable": false
+        }
+      },
+      "expected": {
+        "kind": "validation",
+        "code": "validation",
+        "message": "Validation failed.",
+        "isRetryable": false,
+        "details": {
+          "errors": []
+        }
+      }
+    },
+    {
+      "name": "should keep the failures it can read when an item of errors is not a failure",
+      "input": {
+        "status": 400,
+        "body": {
+          "detail": "Validation failed.",
+          "code": "validation",
+          "isRetryable": false,
+          "errors": [
+            {
+              "pointer": "#/email",
+              "code": "required",
+              "detail": "is required"
+            },
+            {
+              "pointer": 1,
+              "code": "required"
+            },
+            "is required"
+          ]
+        }
+      },
+      "expected": {
+        "kind": "validation",
+        "code": "validation",
+        "message": "Validation failed.",
+        "isRetryable": false,
+        "details": {
+          "errors": [
+            {
+              "pointer": "#/email",
+              "code": "required",
+              "detail": "is required"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "should leave errors out when the status is not validation's",
+      "input": {
+        "status": 404,
+        "body": {
+          "detail": "Order 42 not found.",
+          "code": "orders/order/not-found",
+          "isRetryable": false,
+          "errors": [
+            {
+              "pointer": "#/orderId",
+              "code": "unknown",
+              "detail": "is unknown"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "not-found",
+        "code": "orders/order/not-found",
+        "message": "Order 42 not found.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should leave the retry delay out when it is not a whole number of seconds",
+      "input": {
+        "status": 429,
+        "body": {
+          "detail": "Too many requests.",
+          "code": "rate-limited",
+          "isRetryable": true,
+          "retryAfterSeconds": 1.5
+        }
+      },
+      "expected": {
+        "kind": "rate-limited",
+        "code": "rate-limited",
+        "message": "Too many requests.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should leave the retry delay out when it is negative",
+      "input": {
+        "status": 429,
+        "body": {
+          "detail": "Too many requests.",
+          "code": "rate-limited",
+          "isRetryable": true,
+          "retryAfterSeconds": -30
+        }
+      },
+      "expected": {
+        "kind": "rate-limited",
+        "code": "rate-limited",
+        "message": "Too many requests.",
+        "isRetryable": true
+      }
+    },
+    {
+      "name": "should give the kind's isRetryable when the body's is not a boolean",
+      "input": {
+        "status": 409,
+        "body": {
+          "detail": "Order 42 is being updated.",
+          "code": "orders/order/conflict",
+          "isRetryable": "yes"
+        }
+      },
+      "expected": {
+        "kind": "conflict",
+        "code": "orders/order/conflict",
+        "message": "Order 42 is being updated.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when the body's code is empty",
+      "input": {
+        "status": 422,
+        "body": {
+          "detail": "Order 42 is already paid.",
+          "code": ""
+        }
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 422.",
+        "isRetryable": false,
+        "details": {
+          "status": 422,
+          "body": {
+            "detail": "Order 42 is already paid.",
+            "code": ""
+          }
+        }
+      }
+    },
+    {
+      "name": "should give an UnexpectedError when the status is not an error",
+      "input": {
+        "status": 200,
+        "body": {
+          "detail": "Order 42 not found.",
+          "code": "orders/order/not-found"
+        }
+      },
+      "expected": {
+        "kind": "internal",
+        "code": "internal",
+        "message": "Unexpected response with status 200.",
+        "isRetryable": false,
+        "details": {
+          "status": 200,
+          "body": {
+            "detail": "Order 42 not found.",
+            "code": "orders/order/not-found"
+          }
+        }
+      }
+    },
+    {
+      "name": "should keep the body's code as it is when it is not in the format of eros",
+      "input": {
+        "status": 404,
+        "body": {
+          "detail": "Order 42 not found.",
+          "code": "ORDERS_ORDER_NOT_FOUND"
+        }
+      },
+      "expected": {
+        "kind": "not-found",
+        "code": "ORDERS_ORDER_NOT_FOUND",
+        "message": "Order 42 not found.",
+        "isRetryable": false
+      }
+    },
+    {
+      "name": "should give the kind of the status when the body's code names another kind",
+      "input": {
+        "status": 409,
+        "body": {
+          "detail": "Order 42 not found.",
+          "code": "orders/order/not-found"
+        }
+      },
+      "expected": {
+        "kind": "conflict",
+        "code": "orders/order/not-found",
+        "message": "Order 42 not found.",
+        "isRetryable": false
+      }
+    }
+  ]
+}

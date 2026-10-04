@@ -1,0 +1,116 @@
+[[IgnoredVulns]]
+id = "GHSA-4mjr-xmp4-gh2g"
+ignoreUntil = 2026-12-28
+reason = "qs 6.15.1 comes only with Stryker, whose typed-rest-client pins it; a development tool that never ships"
+
+[[IgnoredVulns]]
+id = "GHSA-q8mj-m7cp-5q26"
+ignoreUntil = 2026-12-28
+reason = "qs 6.15.1 comes only with Stryker, whose typed-rest-client pins it; a development tool that never ships"
+
+[[IgnoredVulns]]
+id = "GHSA-x5fp-wj9c-mxmx"
+ignoreUntil = 2026-12-28
+reason = "qs 6.15.1 comes only with Stryker, whose typed-rest-client pins it; a development tool that never ships"
+
+[[PackageOverrides]]
+name = "is-core-module"
+ecosystem = "npm"
+license.override = ["MIT"]
+reason = "deps.dev reports no licence for is-core-module; its package.json declares MIT"
+
+[[PackageOverrides]]
+name = "busboy"
+ecosystem = "npm"
+license.override = ["MIT"]
+reason = "deps.dev reports no licence for busboy; its package.json declares MIT in the old licenses array. It comes only with @nestjs/platform-express, a development dependency of eros-nestjs's specs"
+
+[[PackageOverrides]]
+name = "streamsearch"
+ecosystem = "npm"
+license.override = ["MIT"]
+reason = "deps.dev reports no licence for streamsearch; its package.json declares MIT in the old licenses array. It comes only with busboy, through @nestjs/platform-express"
+
+[[PackageOverrides]]
+name = "@droneey/eros"
+ecosystem = "npm"
+license.override = ["MIT"]
+reason = "The repository's own package, not yet in the registry; its package.json and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "@droneey/eros-wire"
+ecosystem = "npm"
+license.override = ["MIT"]
+reason = "The repository's own package, not yet in the registry; its package.json and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "@droneey/eros-nestjs"
+ecosystem = "npm"
+license.override = ["MIT"]
+reason = "The repository's own package, not yet in the registry; its package.json and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "droneey-eros"
+ecosystem = "PyPI"
+license.override = ["MIT"]
+reason = "The repository's own package, not yet in the registry; its pyproject.toml and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "droneey-eros-fastapi"
+ecosystem = "PyPI"
+license.override = ["MIT"]
+reason = "The repository's own package, not yet in the registry; its pyproject.toml and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "droneey-eros-fastmcp"
+ecosystem = "PyPI"
+license.override = ["MIT"]
+reason = "The repository's own package, not yet in the registry; its pyproject.toml and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "droneey-eros-wire"
+ecosystem = "PyPI"
+license.override = ["MIT"]
+reason = "The repository's own package, not yet in the registry; its pyproject.toml and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "colorama"
+ecosystem = "PyPI"
+license.override = ["BSD-3-Clause"]
+reason = "deps.dev reports a non-standard licence for colorama; its LICENSE.txt is BSD-3-Clause"
+
+[[PackageOverrides]]
+name = "libcst"
+ecosystem = "PyPI"
+license.override = ["MIT", "PSF-2.0", "Apache-2.0"]
+reason = "deps.dev reports a non-standard licence for libcst; its LICENSE is MIT, with files from CPython under PSF-2.0 and from typeshed under Apache-2.0"
+
+[[PackageOverrides]]
+name = "vulture"
+ecosystem = "PyPI"
+license.override = ["MIT"]
+reason = "deps.dev reports a non-standard licence for vulture; its LICENSE.txt is MIT"
+
+[[PackageOverrides]]
+name = "beartype"
+ecosystem = "PyPI"
+license.override = ["MIT"]
+reason = "deps.dev reports a non-standard licence for beartype; its metadata and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "uncalled-for"
+ecosystem = "PyPI"
+license.override = ["MIT"]
+reason = "deps.dev reports a non-standard licence for uncalled-for; its metadata and LICENSE declare MIT"
+
+[[PackageOverrides]]
+name = "pyperclip"
+ecosystem = "PyPI"
+license.override = ["BSD-3-Clause"]
+reason = "deps.dev reports a non-standard licence for pyperclip; its LICENSE.txt is BSD-3-Clause"
+
+[[PackageOverrides]]
+name = "pywin32"
+ecosystem = "PyPI"
+license.override = ["PSF-2.0"]
+reason = "deps.dev reports no standard licence for pywin32, which mcp installs on Windows; its metadata and LICENSE.txt are the PSF licence"

@@ -1,0 +1,477 @@
+{
+  "operation": "code",
+  "description": "An error's code is [<module>/<entity>/]<kind>[/<reason>]: the meta's module and entity, the kind, then the meta's reason, joined by slashes. An unexpected error's code is always internal. Invalid input is refused when the error is built.",
+  "cases": [
+    {
+      "name": "should join the module, the entity and the kind when meta has a module and an entity",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "order"
+        }
+      },
+      "expected": {
+        "code": "orders/order/not-found"
+      }
+    },
+    {
+      "name": "should add the reason after the kind when meta has a reason",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "order",
+          "reason": "archived"
+        }
+      },
+      "expected": {
+        "code": "orders/order/not-found/archived"
+      }
+    },
+    {
+      "name": "should add the reason after the kind when the kind is violation",
+      "input": {
+        "kind": "violation",
+        "meta": {
+          "module": "orders",
+          "entity": "order",
+          "reason": "already-paid"
+        }
+      },
+      "expected": {
+        "code": "orders/order/violation/already-paid"
+      }
+    },
+    {
+      "name": "should give the module, the entity and the kind when a violation has no reason",
+      "input": {
+        "kind": "violation",
+        "meta": {
+          "module": "orders",
+          "entity": "order"
+        }
+      },
+      "expected": {
+        "code": "orders/order/violation"
+      }
+    },
+    {
+      "name": "should give the kind and the reason when meta has only a reason",
+      "input": {
+        "kind": "violation",
+        "meta": {
+          "reason": "already-paid"
+        }
+      },
+      "expected": {
+        "code": "violation/already-paid"
+      }
+    },
+    {
+      "name": "should give the kind and the reason when a validation has only a reason",
+      "input": {
+        "kind": "validation",
+        "meta": {
+          "reason": "missing-body"
+        }
+      },
+      "expected": {
+        "code": "validation/missing-body"
+      }
+    },
+    {
+      "name": "should keep the hyphen inside a segment when a name has two words",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "promo-code"
+        }
+      },
+      "expected": {
+        "code": "orders/promo-code/not-found"
+      }
+    },
+    {
+      "name": "should keep the digits of a segment when a name holds them",
+      "input": {
+        "kind": "conflict",
+        "meta": {
+          "module": "billing",
+          "entity": "invoice-v2"
+        }
+      },
+      "expected": {
+        "code": "billing/invoice-v2/conflict"
+      }
+    },
+    {
+      "name": "should give the kind alone when a subclass carries no meta",
+      "input": {
+        "kind": "not-found",
+        "class": "PlainNotFoundError"
+      },
+      "expected": {
+        "code": "not-found"
+      }
+    },
+    {
+      "name": "should give validation when an error of validation has no meta",
+      "input": {
+        "kind": "validation"
+      },
+      "expected": {
+        "code": "validation"
+      }
+    },
+    {
+      "name": "should give unauthorized when an error of unauthorized has no meta",
+      "input": {
+        "kind": "unauthorized"
+      },
+      "expected": {
+        "code": "unauthorized"
+      }
+    },
+    {
+      "name": "should give forbidden when an error of forbidden has no meta",
+      "input": {
+        "kind": "forbidden"
+      },
+      "expected": {
+        "code": "forbidden"
+      }
+    },
+    {
+      "name": "should give not-found when an error of not-found has no meta",
+      "input": {
+        "kind": "not-found"
+      },
+      "expected": {
+        "code": "not-found"
+      }
+    },
+    {
+      "name": "should give conflict when an error of conflict has no meta",
+      "input": {
+        "kind": "conflict"
+      },
+      "expected": {
+        "code": "conflict"
+      }
+    },
+    {
+      "name": "should give expired when an error of expired has no meta",
+      "input": {
+        "kind": "expired"
+      },
+      "expected": {
+        "code": "expired"
+      }
+    },
+    {
+      "name": "should give payload-too-large when an error of payload-too-large has no meta",
+      "input": {
+        "kind": "payload-too-large"
+      },
+      "expected": {
+        "code": "payload-too-large"
+      }
+    },
+    {
+      "name": "should give violation when an error of violation has no meta",
+      "input": {
+        "kind": "violation"
+      },
+      "expected": {
+        "code": "violation"
+      }
+    },
+    {
+      "name": "should give rate-limited when an error of rate-limited has no meta",
+      "input": {
+        "kind": "rate-limited"
+      },
+      "expected": {
+        "code": "rate-limited"
+      }
+    },
+    {
+      "name": "should give unavailable when an error of unavailable has no meta",
+      "input": {
+        "kind": "unavailable"
+      },
+      "expected": {
+        "code": "unavailable"
+      }
+    },
+    {
+      "name": "should give timeout when an error of timeout has no meta",
+      "input": {
+        "kind": "timeout"
+      },
+      "expected": {
+        "code": "timeout"
+      }
+    },
+    {
+      "name": "should give internal when the error is unexpected",
+      "input": {
+        "kind": "internal",
+        "message": "Order has no items."
+      },
+      "expected": {
+        "code": "internal"
+      }
+    },
+    {
+      "name": "should give internal when an unexpected error has a cause",
+      "input": {
+        "kind": "internal",
+        "message": "Stripe refused our key.",
+        "cause": {
+          "foreign": {
+            "name": "StripeAuthenticationError",
+            "message": "Invalid API Key provided."
+          }
+        }
+      },
+      "expected": {
+        "code": "internal"
+      }
+    },
+    {
+      "name": "should refuse the error when meta has a module and no entity",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when meta has an entity and no module",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "entity": "order"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when the module has a capital letter",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "Orders",
+          "entity": "order"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when the entity has an underscore",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "promo_code"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when the reason is in upper case",
+      "input": {
+        "kind": "violation",
+        "meta": {
+          "module": "orders",
+          "entity": "order",
+          "reason": "ALREADY_PAID"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when the module is an empty string",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "",
+          "entity": "order"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when the reason is an empty string",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "order",
+          "reason": ""
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a segment begins with a hyphen",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "-order"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a segment ends with a hyphen",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "order",
+          "reason": "archived-"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a segment holds two hyphens in a row",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "promo--code"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a segment holds a slash",
+      "input": {
+        "kind": "violation",
+        "meta": {
+          "reason": "already/paid"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a segment holds a space",
+      "input": {
+        "kind": "violation",
+        "meta": {
+          "reason": "already paid"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a segment holds a letter outside ASCII",
+      "input": {
+        "kind": "not-found",
+        "meta": {
+          "module": "orders",
+          "entity": "café"
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when the retry delay is negative",
+      "input": {
+        "kind": "unavailable",
+        "retryAfterSeconds": -1
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a failure's pointer has no hash",
+      "input": {
+        "kind": "validation",
+        "details": {
+          "errors": [
+            {
+              "pointer": "/email",
+              "code": "required",
+              "detail": "is required"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a failure's pointer has no slash after the hash",
+      "input": {
+        "kind": "validation",
+        "details": {
+          "errors": [
+            {
+              "pointer": "#email",
+              "code": "required",
+              "detail": "is required"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    },
+    {
+      "name": "should refuse the error when a failure's pointer has a tilde that escapes nothing",
+      "input": {
+        "kind": "validation",
+        "details": {
+          "errors": [
+            {
+              "pointer": "#/a~2b",
+              "code": "required",
+              "detail": "is required"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "isRejected": true
+      }
+    }
+  ]
+}

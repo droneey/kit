@@ -1,0 +1,5 @@
+extends:
+  - .droneey/constitution/presets/common/lefthook/workflow/version-control.yaml
+  - .droneey/constitution/presets/common/lefthook/workflow/biome.yaml
+  - .droneey/constitution/presets/common/lefthook/workflow/ruff.yaml
+  - .droneey/constitution/presets/common/lefthook/workflow/betterleaks.yaml
